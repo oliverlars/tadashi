@@ -27,4 +27,5 @@ internal void*
 _push_size_zero(Arena* arena, u64 size){
     void* result = _push_size(arena, size);
     memset(result, 0, size);
+    return result;
 }

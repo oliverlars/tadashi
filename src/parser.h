@@ -1,35 +1,61 @@
 struct Parser {
-    
+    Lexer l;
 };
 
-enum Ast_Property {
-    AST_HAS_IDENTIFIER,,
-    AST_HAS_EXPRESSION,
-    AST_HAS_MEMBERS,
-    AST_HAS_PARAMETERS,
-    AST_HAS_SCOPE,
-    AST_HAS_LEFT,
-    AST_HAS_RIGHT,
+enum Ast_Type {
+    AST_INVALID,
+    AST_IDENTIFIER,
+    AST_BINARY,
+    AST_LITERAL,
+    AST_FUNCTION,
+    AST_FUNCTION_CALL,
+    AST_UNARY,
+    AST_DECLARATION,
+    AST_SCOPE,
+    AST_VALUE,
 };
 
-#define AST_PROPTIES_MAX 256
+enum Op_Type {
+    OP_ADD,
+    OP_SUB,
+    OP_MUL,
+    OP_DIV,
+};
 
 struct Ast_Node {
+    Token name;
+    Ast_Type type;
     
-    Token identifier;
-    
-    Ast_Node* node;
     Ast_Node* next;
     Ast_Node* prev;
     
-    Ast_Node* parameters;
-    Ast_Node* members;
-    Ast_Node* scope;
-    Ast_Node* expr;
-    Ast_Node* left;
-    Ast_Node* right;
-    
-    u64 properties[(AST_PROPTIES_MAX+63)/64];
+    union {
+        struct {
+            Op_Type op_type;
+            Ast_Node* left;
+            Ast_Node* right;
+        }binary;
+        struct {
+            Ast_Node* right;
+        } unary;
+        struct {
+            Ast_Node* expr;
+        } decl;
+        struct {
+            Ast_Node* members;
+        } scope;
+        struct {
+            Ast_Node* func;
+        } call;
+        struct {
+            Ast_Node* parameters;
+            Ast_Node* body;
+        } func;
+        
+        struct {
+            char number; 
+        }value;
+    };
 };
 
 global Arena global_node_arena;

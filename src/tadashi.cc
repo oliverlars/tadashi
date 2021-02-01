@@ -30,9 +30,8 @@ open_source(char* filename){
 int main(){
     Lexer lexer = {};
     lexer.at = open_source("test.td");
-    Token token = {};
-    do {
-        token = get_token(&lexer);
-        printf("%.*s\n", token.length, token.at);
-    }while(token.type != TOKEN_EOF);
+    Parser p = {lexer};
+    global_node_arena = make_arena(sizeof(Ast_Node)*1024);
+    auto scope = parse_scope(&p);
+    return 0;
 }

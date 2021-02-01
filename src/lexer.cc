@@ -74,5 +74,13 @@ get_token(Lexer* l){
             }
         }break;
     }
+    
+    return token;
+}
+
+internal Token
+peek_token(Lexer* l){
+    Lexer l2 = *l;
+    auto token = get_token(&l2);
     return token;
 }
