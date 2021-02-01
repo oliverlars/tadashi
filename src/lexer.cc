@@ -1,0 +1,78 @@
+
+internal void
+advance_lexer(Lexer* l){
+    l->at++;
+}
+
+internal void
+gobble_whitespace(Lexer* l){
+    while(is_whitespace(*l->at)){
+        advance_lexer(l);
+    }
+}
+
+internal Token
+get_token(Lexer* l){
+    
+    gobble_whitespace(l);
+    char c = *l->at;
+    Token token = {};
+    token.at = l->at;
+    token.length = 1;
+    advance_lexer(l);
+    
+    switch(c){
+        case 0:{
+            token.type = TOKEN_EOF;
+        }break;
+        case '=':{
+            token.type = TOKEN_EQUALS;
+        }break;
+        case ',':{
+            token.type = TOKEN_COMMA;
+        }break;
+        case ';':{
+            token.type = TOKEN_SEMICOLON;
+        }break;
+        case '}':{
+            token.type = TOKEN_RIGHT_BRACKET;
+        }break;
+        case '{':{
+            token.type = TOKEN_LEFT_BRACKET;
+        }break;
+        case '(':{
+            token.type = TOKEN_LEFT_PAREN;
+        }break;
+        case ')':{
+            token.type = TOKEN_RIGHT_PAREN;
+        }break;
+        case '+':{
+            token.type = TOKEN_PLUS;
+        }break;
+        case '/':{
+            token.type = TOKEN_FORWARD_SLASH;
+        }break;
+        case '*':{
+            token.type = TOKEN_ASTERISK;
+        }break;
+        case '-':{
+            token.type = TOKEN_MINUS;
+        }break;
+        default: {
+            if(is_alpha(c) || c == '_'){
+                while(is_alpha(*l->at) || *l->at == '_'){
+                    advance_lexer(l);
+                }
+                token.length = l->at  - token.at;
+                token.type = TOKEN_IDENTIFIER;
+            }else if(is_digit(c)){
+                while(is_digit(*l->at)){
+                    advance_lexer(l);
+                }
+                token.length = l->at  - token.at;
+                token.type = TOKEN_NUMBER;
+            }
+        }break;
+    }
+    return token;
+}
