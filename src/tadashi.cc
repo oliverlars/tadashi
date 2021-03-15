@@ -3,11 +3,13 @@
 #include "lexer.h"
 #include "parser.h"
 #include "vm.h"
+#include "compiler.h"
 
 
 #include "memory.cc"
 #include "lexer.cc"
 #include "parser.cc"
+#include "compiler.cc"
 
 internal char*
 open_source(char* filename){
@@ -28,6 +30,17 @@ open_source(char* filename){
     return result;
 }
 
+/*
+RA
+RB
+RC stack pointer
+RD return address
+
+declarations work by writing to stack pointer location in memory
+
+accessing variables just takes stack pointer - things pushed on
+*/
+
 int main(){
     Lexer lexer = {};
     lexer.at = open_source("test.td");
@@ -35,14 +48,19 @@ int main(){
     global_node_arena = make_arena(sizeof(Ast_Node)*1024);
     auto scope = parse_scope(&p);
     
+    Byte_Code bc = {};
+    bc.at = (instruction*)malloc(sizeof(instruction)*MEMORY_SIZE);
+    bc.start = bc.at;
+    
+    compile_declaration(scope->scope.members, &bc);
+    compile_declaration(scope->scope.members->next, &bc);
+    
     VM vm = {};
+    vm.RC = 256; //stack pointer
     
-    vm.memory = (u8*)malloc(MEMORY_SIZE);
-    vm.memory[0] = 0b000000000000000000000111;
-    vm.memory[1] = 0b000000000000000000000001;
-    vm.memory[2] = 0b000001000100000000000000;
+    vm.memory = bc.start;
     
-    while(vm.pc < 3){
+    while(vm.pc < 6){
         
         instruction instr = vm.memory[vm.pc];
         
@@ -77,7 +95,7 @@ int main(){
             case OP_STORE_ABSOLUTE:{
                 int r = get_register_x(instr);
                 int operand = get_operand(instr);
-                vm.memory[operand] = vm.registers[r];
+                vm.memory[r] = vm.registers[r];
             }break;
             
             case OP_AND_ABSOLUTE:{
@@ -117,44 +135,44 @@ int main(){
             }break;
             
             case OP_LOAD_REGISTER:{
-                int x = get_reigster_x(instr);
-                int y = get_reigster_y(instr);
+                int x = get_register_x(instr);
+                int y = get_register_y(instr);
                 vm.registers[x] = vm.memory[vm.registers[y]];
             }break;
             
             case OP_STORE_REGISTER:{
-                int x = get_reigster_x(instr);
-                int y = get_reigster_y(instr);
+                int x = get_register_x(instr);
+                int y = get_register_y(instr);
                 vm.memory[vm.registers[y]] = vm.registers[x];
             }break;
             
             case OP_AND_REGISTER:{
-                int x = get_reigster_x(instr);
-                int y = get_reigster_y(instr);
+                int x = get_register_x(instr);
+                int y = get_register_y(instr);
                 vm.registers[x] = vm.registers[x] & vm.registers[y];
             }break;
             
             case OP_OR_REGISTER:{
-                int x = get_reigster_x(instr);
-                int y = get_reigster_y(instr);
+                int x = get_register_x(instr);
+                int y = get_register_y(instr);
                 vm.registers[x] = vm.registers[x] | vm.registers[y];
             }break;
             
             case OP_XOR_REGISTER:{
-                int x = get_reigster_x(instr);
-                int y = get_reigster_y(instr);
+                int x = get_register_x(instr);
+                int y = get_register_y(instr);
                 vm.registers[x] = vm.registers[x] ^ vm.registers[y];
             }break;
             
             case OP_SR0_REGISTER:{
-                int x = get_reigster_x(instr);
-                int y = get_reigster_y(instr);
+                int x = get_register_x(instr);
+                int y = get_register_y(instr);
                 vm.registers[x] = vm.registers[x] >> vm.registers[y];
             }break;
             
             case OP_SL0_REGISTER:{
-                int x = get_reigster_x(instr);
-                int y = get_reigster_y(instr);
+                int x = get_register_x(instr);
+                int y = get_register_y(instr);
                 vm.registers[x] = vm.registers[x] << vm.registers[y];
             }break;
             
@@ -241,7 +259,7 @@ int main(){
             }break;
             
             case OP_JUMP_REGISTER:{
-                int y = get_address_y(instr);
+                int y = get_address(instr);
                 vm.pc = vm.registers[y];
             }break;
             
@@ -261,6 +279,11 @@ int main(){
     }
     printf("RA: %d\n", vm.RA);
     printf("RB: %d\n", vm.RB);
+    printf("RC: %d\n", vm.RC);
+    printf("RD: %d\n", vm.RD);
+    
+    printf("stack: %d\n", vm.memory[256]);
+    printf("stack: %d\n", vm.memory[257]);
     
     return 0;
 }

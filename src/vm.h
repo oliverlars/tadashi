@@ -1,6 +1,7 @@
+typedef u32 instruction;
 
 struct VM {
-    u8* memory;
+    instruction* memory;
     int pc;
     
     union {
@@ -16,6 +17,7 @@ struct VM {
     b32 carry;
     b32 positive;
     b32 negative;
+    b32 zero;
 };
 
 #define MEMORY_SIZE (65535)
@@ -24,9 +26,10 @@ struct VM {
 #define RAM (0x0)
 
 
-typedef u32 instruction;
 
 #define INSTRUCTION_LENGTH (24)
+#define OPCODE_LENGTH (6)
+#define REGISTER_LENGTH (2)
 
 #define get_opcode(instr) (((instr) >> (INSTRUCTION_LENGTH - 6)) & 0b111111)
 #define get_register_x(instr) (((instr) >> (INSTRUCTION_LENGTH - 8)) & 0b11)

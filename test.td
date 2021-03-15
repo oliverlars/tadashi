@@ -1,5 +1,5 @@
-a = 20;
-b = 40;
+a = 50;
+b = 128;
 c = a + b;
 
 fn test_func(a, b, c) {

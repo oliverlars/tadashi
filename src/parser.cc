@@ -47,11 +47,11 @@ make_value_node(){
     return value;
 }
 
-internal char
+internal int
 token_to_value(Token token){
-    char result = 0;
+    int result = 0;
     for(int i = 0; i < token.length; i++){
-        result = *token.at - '0' + result*10;
+        result = token.at[i] - '0' + result*10;
     }
     return result;
 }
