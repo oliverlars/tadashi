@@ -141,6 +141,7 @@ parse_decl(Parser* p){
     decl->name = token;
     get_token(&p->l); // equals
     decl->decl.expr = parse_expr(p);
+    get_token(&p->l); //semicolon
     return decl;
 }
 
@@ -150,11 +151,17 @@ parse_stmt(Parser* p){
     return stmt;
 }
 
+internal Ast_Node*
+parse_function(Parser* p){
+    
+}
+
 
 internal Ast_Node*
 parse_scope(Parser* p){
     Ast_Node* scope = make_scope_node();
     scope->scope.members = parse_stmt(p);
     scope->scope.members->next = parse_stmt(p);
+    scope->scope.members->next->next = parse_stmt(p);
     return scope;
 }
