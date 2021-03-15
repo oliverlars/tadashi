@@ -59,30 +59,49 @@ int main(){
             case OP_ADD_ABSOLUTE:{
                 int r = get_register_x(instr);
                 int operand = get_operand(instr);
-                vm.registers[r] = operand;
+                vm.registers[r] = vm.registers[r] + operand;
             }break;
             
             case OP_SUB_ABSOLUTE:{
-                
+                int r = get_register_x(instr);
+                int operand = get_operand(instr);
+                vm.registers[r] = vm.registers[r] - operand;
             }break;
             
             case OP_LOAD_ABSOLUTE:{
-                
+                int r = get_register_x(instr);
+                int operand = get_operand(instr);
+                vm.registers[r] = vm.memory[operand];
             }break;
             
             case OP_STORE_ABSOLUTE:{
+                int r = get_register_x(instr);
+                int operand = get_operand(instr);
+                vm.memory[operand] = vm.registers[r];
             }break;
             
             case OP_AND_ABSOLUTE:{
+                int r = get_register_x(instr);
+                int operand = get_operand(instr);
+                vm.registers[r] = vm.registers[r] + operand;
             }break;
             
             case OP_OR_ABSOLUTE:{
+                int r = get_register_x(instr);
+                int operand = get_operand(instr);
+                vm.registers[r] = vm.registers[r] + operand;
             }break;
             
             case OP_XOR_ABSOLUTE:{
+                int r = get_register_x(instr);
+                int operand = get_operand(instr);
+                vm.registers[r] = vm.registers[r] + operand;
             }break;
             
             case OP_MOVE_REGISTER:{
+                int r = get_register_x(instr);
+                int operand = get_operand(instr);
+                vm.registers[r] = vm.registers[r] + operand;
             }break;
             
             case OP_ADD_REGISTER:{
@@ -140,45 +159,90 @@ int main(){
             }break;
             
             case OP_ROR_REGISTER:{
+                
             }break;
             
             case OP_ROL_REGISTER:{
             }break;
             
             case OP_JUMP_UNCONDITIONAL:{
+                int address = get_address(instr);
+                vm.pc = address;
             }break;
             
             case OP_JUMP_ZERO:{
+                if(vm.zero){
+                    int address = get_address(instr);
+                    vm.pc = address;
+                }
             }break;
             
             case OP_JUMP_NOT_ZERO:{
+                if(!vm.zero){
+                    int address = get_address(instr);
+                    vm.pc = address;
+                }
             }break;
             
             case OP_JUMP_CARRY:{
+                if(vm.carry){
+                    int address = get_address(instr);
+                    vm.pc = address;
+                }
             }break;
             
             case OP_JUMP_NO_CARRY:{
+                if(!vm.carry){
+                    int address = get_address(instr);
+                    vm.pc = address;
+                }
             }break;
             
             case OP_JUMP_NEGATIVE:{
+                if(vm.negative){
+                    int address = get_address(instr);
+                    vm.pc = address;
+                }
             }break;
             
             case OP_JUMP_NOT_NEGATIVE:{
+                if(!vm.negative){
+                    int address = get_address(instr);
+                    vm.pc = address;
+                }
             }break;
             
             case OP_JUMP_POSITIVE:{
+                if(vm.positive){
+                    int address = get_address(instr);
+                    vm.pc = address;
+                }
             }break;
             
             case OP_JUMP_NOT_POSITIVE:{
+                if(!vm.positive){
+                    int address = get_address(instr);
+                    vm.pc = address;
+                }
             }break;
             
             case OP_JUMP_OVERFLOW:{
+                if(vm.overflow){
+                    int address = get_address(instr);
+                    vm.pc = address;
+                }
             }break;
             
             case OP_JUMP_NO_OVERFLOW:{
+                if(!vm.overflow){
+                    int address = get_address(instr);
+                    vm.pc = address;
+                }
             }break;
             
             case OP_JUMP_REGISTER:{
+                int y = get_address_y(instr);
+                vm.pc = vm.registers[y];
             }break;
             
             case OP_CALL:{

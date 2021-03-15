@@ -12,10 +12,10 @@ struct VM {
         };
         int registers[4];
     };
-    int overflow;
-    int carry;
-    int positive;
-    int negative;
+    b32 overflow;
+    b32 carry;
+    b32 positive;
+    b32 negative;
 };
 
 #define MEMORY_SIZE (65535)
