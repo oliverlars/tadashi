@@ -39,30 +39,158 @@ int main(){
     
     vm.memory = (u8*)malloc(MEMORY_SIZE);
     vm.memory[0] = 0b000000000000000000000111;
+    vm.memory[1] = 0b000000000000000000000001;
+    vm.memory[2] = 0b000001000100000000000000;
     
-    while(vm.pc < 1){
+    while(vm.pc < 3){
         
         instruction instr = vm.memory[vm.pc];
         
         int opcode = get_opcode(instr);
         
         switch(opcode){
+            
             case OP_MOVE_ABSOLUTE:{
-                int r = get_register(instr);
+                int r = get_register_x(instr);
                 int operand = get_operand(instr);
-                vm.registers[r] = get_operand(instr);
+                vm.registers[r] = operand;
             }break;
             
-            case OP_CALL:{
+            case OP_ADD_ABSOLUTE:{
+                int r = get_register_x(instr);
+                int operand = get_operand(instr);
+                vm.registers[r] = operand;
+            }break;
+            
+            case OP_SUB_ABSOLUTE:{
                 
             }break;
             
-            case OP_RETURN:{
+            case OP_LOAD_ABSOLUTE:{
                 
+            }break;
+            
+            case OP_STORE_ABSOLUTE:{
+            }break;
+            
+            case OP_AND_ABSOLUTE:{
+            }break;
+            
+            case OP_OR_ABSOLUTE:{
+            }break;
+            
+            case OP_XOR_ABSOLUTE:{
+            }break;
+            
+            case OP_MOVE_REGISTER:{
             }break;
             
             case OP_ADD_REGISTER:{
+                int x = get_register_x(instr);
+                int y = get_register_y(instr);
+                vm.registers[x] = vm.registers[x] + vm.registers[y];
             }break;
+            
+            case OP_SUB_REGISTER:{
+                int x = get_register_x(instr);
+                int y = get_register_y(instr);
+                vm.registers[x] = vm.registers[x] - vm.registers[y];
+            }break;
+            
+            case OP_LOAD_REGISTER:{
+                int x = get_reigster_x(instr);
+                int y = get_reigster_y(instr);
+                vm.registers[x] = vm.memory[vm.registers[y]];
+            }break;
+            
+            case OP_STORE_REGISTER:{
+                int x = get_reigster_x(instr);
+                int y = get_reigster_y(instr);
+                vm.memory[vm.registers[y]] = vm.registers[x];
+            }break;
+            
+            case OP_AND_REGISTER:{
+                int x = get_reigster_x(instr);
+                int y = get_reigster_y(instr);
+                vm.registers[x] = vm.registers[x] & vm.registers[y];
+            }break;
+            
+            case OP_OR_REGISTER:{
+                int x = get_reigster_x(instr);
+                int y = get_reigster_y(instr);
+                vm.registers[x] = vm.registers[x] | vm.registers[y];
+            }break;
+            
+            case OP_XOR_REGISTER:{
+                int x = get_reigster_x(instr);
+                int y = get_reigster_y(instr);
+                vm.registers[x] = vm.registers[x] ^ vm.registers[y];
+            }break;
+            
+            case OP_SR0_REGISTER:{
+                int x = get_reigster_x(instr);
+                int y = get_reigster_y(instr);
+                vm.registers[x] = vm.registers[x] >> vm.registers[y];
+            }break;
+            
+            case OP_SL0_REGISTER:{
+                int x = get_reigster_x(instr);
+                int y = get_reigster_y(instr);
+                vm.registers[x] = vm.registers[x] << vm.registers[y];
+            }break;
+            
+            case OP_ROR_REGISTER:{
+            }break;
+            
+            case OP_ROL_REGISTER:{
+            }break;
+            
+            case OP_JUMP_UNCONDITIONAL:{
+            }break;
+            
+            case OP_JUMP_ZERO:{
+            }break;
+            
+            case OP_JUMP_NOT_ZERO:{
+            }break;
+            
+            case OP_JUMP_CARRY:{
+            }break;
+            
+            case OP_JUMP_NO_CARRY:{
+            }break;
+            
+            case OP_JUMP_NEGATIVE:{
+            }break;
+            
+            case OP_JUMP_NOT_NEGATIVE:{
+            }break;
+            
+            case OP_JUMP_POSITIVE:{
+            }break;
+            
+            case OP_JUMP_NOT_POSITIVE:{
+            }break;
+            
+            case OP_JUMP_OVERFLOW:{
+            }break;
+            
+            case OP_JUMP_NO_OVERFLOW:{
+            }break;
+            
+            case OP_JUMP_REGISTER:{
+            }break;
+            
+            case OP_CALL:{
+                int address = get_call_address(instr);
+                vm.RD = vm.pc;
+                vm.pc = address;
+            }break;
+            
+            case OP_RETURN:{
+                vm.pc = vm.RD;
+            }break;
+            
         }
         
         vm.pc++;

@@ -12,7 +12,10 @@ struct VM {
         };
         int registers[4];
     };
-    
+    int overflow;
+    int carry;
+    int positive;
+    int negative;
 };
 
 #define MEMORY_SIZE (65535)
@@ -26,10 +29,14 @@ typedef u32 instruction;
 #define INSTRUCTION_LENGTH (24)
 
 #define get_opcode(instr) (((instr) >> (INSTRUCTION_LENGTH - 6)) & 0b111111)
-#define get_register(instr) (((instr) >> (INSTRUCTION_LENGTH - 8)) & 0b11)
+#define get_register_x(instr) (((instr) >> (INSTRUCTION_LENGTH - 8)) & 0b11)
+#define get_register_y(instr) (((instr) >> (INSTRUCTION_LENGTH - 10)) & 0b11)
 #define get_operand(instr) ((instr) & 0xFFFF)
+#define get_call_address(instr) ((instr) & 0b11111111111111)
+#define get_address(instr) ((instr) & 0b1111111111111111)
 
 enum OpCodes {
+    
     OP_MOVE_ABSOLUTE = 0,
     OP_ADD_ABSOLUTE,
     OP_SUB_ABSOLUTE,
