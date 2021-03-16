@@ -162,26 +162,28 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
         case AST_BINARY: {
             int a = compile_expression(root->binary.left, RA, compiler);
             int b = compile_expression(root->binary.right, RB, compiler);
+            
+            int result = copy_temporary(compiler, a);
+            
             switch(root->binary.op_type){
                 case OP_ADD:{
-                    add_temporaries(compiler, a, b);
+                    add_temporaries(compiler, result, b);
                 }break;
                 case OP_SUB:{
-                    sub_temporaries(compiler, a, b);
+                    sub_temporaries(compiler, result, b);
                 }break;
                 case OP_MUL:{
-                    auto a_copy = copy_temporary(compiler, a);
                     sub_temporary_absolute(compiler, b, 1);
                     auto jump = compiler->at-1;
                     
-                    add_temporaries(compiler, a, a_copy);
+                    add_temporaries(compiler, result, a);
                     
                     sub_temporary_absolute(compiler, b, 1);
                     
                     emit_jump_not_zero(compiler, jump - compiler->start);
                 }break;
             }
-            return a;
+            return result;
         }break;
         
         case AST_IDENTIFIER: {
@@ -198,6 +200,6 @@ internal void
 compile_declaration(Ast_Node* root, Compiler* compiler){
     auto decl = root->decl;
     auto expr = decl.expr;
-    compile_expression(expr, RA, compiler);
-    //push_local_address(compiler, root->name, compile_expression(expr, RA, compiler));
+    int local = compile_expression(expr, RA, compiler);
+    push_local_address(compiler, root->name, local);
 }
