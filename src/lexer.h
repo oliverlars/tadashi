@@ -28,6 +28,15 @@ struct Token {
     Token_Type type;
 };
 
+internal bool
+tokens_equal(Token a, Token b){
+    if(a.length != b.length) return false;
+    for(int i = 0; i < a.length; i++){
+        if(a.at[i] != b.at[i]) return false;
+    }
+    return true;
+}
+
 #define is_newline(x) ((x) == '\n' || (x) == '\r')
 #define is_whitespace(x) ((x) == ' ' || (x) == '\t' || (x) == '\v' || (x) == '\f' || is_newline(x))
 #define is_digit(x) ((x) <= '9' && (x) >= '0')

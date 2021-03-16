@@ -55,3 +55,5 @@ const f32 Tau32_ = 6.283185307179f;
 #define Kilobytes(x) (1024ll*x)
 #define Megabytes(x) (1024ll*Kilobytes(x))
 #define Gigabytes(x) (1024ll*Megabytes(x))
+
+#define defer_loop(begin, end) for(int _i_ = (begin, 0); !_i_; ++_i_, end)
