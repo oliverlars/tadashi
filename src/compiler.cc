@@ -196,7 +196,11 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     
                     emit_jump_not_zero(compiler, jump - compiler->start);
                 }break;
+                case OP_DIV: {
+                    
+                }break;
             }
+            
             return result;
         }break;
         

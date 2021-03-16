@@ -56,9 +56,16 @@ token_to_value(Token token){
     return result;
 }
 
+Ast_Node* parse_expr(Parser* p);
+
 internal Ast_Node*
 parse_base_expr(Parser* p){
     auto token = get_token(&p->l);
+    if(token.type == TOKEN_LEFT_PAREN){
+        auto expr = parse_expr(p);
+        get_token(&p->l);
+        return expr;
+    }
     if(token.type == TOKEN_IDENTIFIER){
         auto identifier = make_identifier_node();
         identifier->name = token;
