@@ -301,7 +301,7 @@ int main(){
     printf("RC: %d\n", vm.RC);
     printf("RD: %d\n", vm.RD);
     
-    for(int i = 0; i < 10; i++){
+    for(int i = 0; i < 20; i++){
         printf("stack: %d\n", vm.memory[256+i]);
     }
     

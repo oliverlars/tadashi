@@ -41,6 +41,14 @@ emit_sub_absolute(Compiler* compiler, Register r, int value){
 }
 
 internal void
+emit_move_register(Compiler* compiler, Register x, Register y){
+    *compiler->at = OP_MOVE_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
+    *compiler->at += (int)y << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    compiler->at++;
+}
+
+internal void
 emit_store_register(Compiler* compiler, Register x, Register y){
     *compiler->at = OP_STORE_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
@@ -96,7 +104,7 @@ push_temporary_from_register(Compiler* compiler, Register r){
 }
 
 internal int
-copy_temporary(Compiler* compiler, int address){
+duplicate_temporary(Compiler* compiler, int address){
     emit_load_absolute(compiler, RA, STACK_START + address); 
     return push_temporary_from_register(compiler, RA);
 }
@@ -106,12 +114,12 @@ pop_temporary(Compiler* compiler, Register r, int value){
     compiler->stack_ptr--;
 }
 
-internal void
+internal int
 push_local(Compiler* compiler, Token name, int value){
     emit_move_absolute(compiler, RA, value);
     emit_store_absolute(compiler, RA, STACK_START + compiler->stack_ptr);
     compiler->variables[compiler->variable_count++].name = name;
-    
+    return compiler->stack_ptr++;
 }
 
 internal void
@@ -150,6 +158,12 @@ sub_temporaries(Compiler* compiler, int address_x, int address_y){
     emit_store_absolute(compiler, RA,STACK_START +  address_x);
 }
 
+internal void
+copy_temporary(Compiler* compiler, int address_x, int address_y){
+    emit_load_absolute(compiler, RA, STACK_START + address_y);
+    emit_store_absolute(compiler, RA, STACK_START + address_x);
+}
+
 //returns stack positions for variables/temporaries
 internal int
 compile_expression(Ast_Node* root, Register r, Compiler* compiler){
@@ -163,7 +177,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             int a = compile_expression(root->binary.left, RA, compiler);
             int b = compile_expression(root->binary.right, RB, compiler);
             
-            int result = copy_temporary(compiler, a);
+            int result = duplicate_temporary(compiler, a);
             
             switch(root->binary.op_type){
                 case OP_ADD:{
@@ -200,6 +214,11 @@ internal void
 compile_declaration(Ast_Node* root, Compiler* compiler){
     auto decl = root->decl;
     auto expr = decl.expr;
-    int local = compile_expression(expr, RA, compiler);
-    push_local_address(compiler, root->name, local);
+    int local = push_local(compiler, root->name, 0);
+    
+    int stack_ptr = compiler->stack_ptr;
+    
+    int init = compile_expression(expr, RA, compiler);
+    copy_temporary(compiler, local, init);
+    compiler->stack_ptr = stack_ptr;
 }
