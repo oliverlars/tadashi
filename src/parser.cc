@@ -47,6 +47,13 @@ make_value_node(){
     return value;
 }
 
+internal Ast_Node*
+make_return_node(){
+    auto ret = make_ast_node();
+    ret->type = AST_RETURN;
+    return ret;
+}
+
 internal int
 token_to_value(Token token){
     int result = 0;
@@ -146,29 +153,95 @@ parse_decl(Parser* p){
     auto token = get_token(&p->l);
     auto decl = make_declaration_node();
     decl->name = token;
-    get_token(&p->l); // equals
-    decl->decl.expr = parse_expr(p);
-    get_token(&p->l); //semicolon
+    //get_token(&p->l); // equals
+    if(token_equals_string(peek_token(&p->l), "=")){
+        get_token(&p->l);
+        decl->decl.expr = parse_expr(p);
+    }
     return decl;
 }
 
 internal Ast_Node*
-parse_stmt(Parser* p){
-    auto stmt = parse_decl(p);
-    return stmt;
+parse_return(Parser* p){
+    get_token(&p->l); //return
+    auto ret = make_return_node();
+    auto expr = parse_expr(p);
+    ret->ret.expr = expr;
+    return ret;
 }
 
 internal Ast_Node*
+parse_stmt(Parser* p){
+    Ast_Node* stmt;
+    if(token_equals_string(peek_token(&p->l), "return")){
+        stmt = parse_return(p);
+    }else {
+        stmt = parse_decl(p);
+    }
+    get_token(&p->l); //semicolon
+    return stmt;
+}
+
+Ast_Node* parse_scope(Parser* p);
+
+internal Ast_Node*
 parse_function(Parser* p){
+    get_token(&p->l); //skip fn
+    auto name = get_token(&p->l);
     
+    auto func = make_function_node();
+    func->name = name;
+    
+    get_token(&p->l); //left paren
+    Token right_paren = {};
+    right_paren.at = ")"; 
+    right_paren.length = 1;
+    
+    auto params = &func->func.parameters;
+    while(!tokens_equal(peek_token(&p->l), right_paren)){
+        auto param = parse_decl(p);
+        *params = param;
+        params = &(*params)->next;
+        
+        if(!token_equals_string(peek_token(&p->l), ",")) {
+            break;
+        }
+    }
+    get_token(&p->l);
+    auto left_bracket = get_token(&p->l);
+    auto scope = parse_scope(p);
+    auto right_bracket = get_token(&p->l);
+    func->func.body = scope;
+    
+    return func;
 }
 
 
 internal Ast_Node*
 parse_scope(Parser* p){
     Ast_Node* scope = make_scope_node();
-    scope->scope.members = parse_stmt(p);
-    scope->scope.members->next = parse_stmt(p);
-    scope->scope.members->next->next = parse_stmt(p);
+    //scope->scope.members = parse_stmt(p);
+    //scope->scope.members->next = parse_stmt(p);
+    //scope->scope.members->next->next = parse_stmt(p);
+    
+    auto stmts = &scope->scope.members;
+    while(!token_equals_string(peek_token(&p->l), "}")){
+        auto stmt = parse_stmt(p);
+        *stmts = stmt;
+        stmts = &(*stmts)->next;
+    }
+    
+    //scope->scope.members = parse_function(p);
+    //scope->scope.members->next = parse_function(p);
+    
+    return scope;
+}
+
+internal Ast_Node*
+parse_global_scope(Parser* p){
+    Ast_Node* scope = make_scope_node();
+    
+    scope->scope.members = parse_function(p);
+    //scope->scope.members->next = parse_function(p);
     return scope;
 }

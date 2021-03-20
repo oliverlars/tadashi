@@ -41,10 +41,6 @@ declarations work by writing to stack pointer location in memory
 accessing variables just takes stack pointer - location on stack
 
 
-remove real stack pointer and just use direct addressing but manage stack
-in compiler
-
-
 register allocation: just make all variables dirty and slap a bunch of 
 load/stores on everything
 */
@@ -56,30 +52,37 @@ int main(){
     Lexer lexer = {};
     lexer.at = open_source("test.td");
     Parser p = {lexer};
-    global_node_arena = make_arena(sizeof(Ast_Node)*1024);
-    auto scope = parse_scope(&p);
+    global_node_arena = make_arena(sizeof(Ast_Node)*4096);
+    auto scope = parse_global_scope(&p);
     
-    Compiler bc = {};
+    Compiler compiler = {};
     // TODO(Oliver): use arena
-    bc.at = (instruction*)malloc(sizeof(instruction)*MEMORY_SIZE);
-    bc.start = bc.at;
-    bc.stack_ptr = 0;
+    compiler.at = (instruction*)malloc(sizeof(instruction)*MEMORY_SIZE);
+    compiler.start = compiler.at;
     
-    compile_declaration(scope->scope.members, &bc);
-    compile_declaration(scope->scope.members->next, &bc);
-    compile_declaration(scope->scope.members->next->next, &bc);
+    //compile_function(scope->scope.members, &compiler);
+    compile_function(scope->scope.members, &compiler);
+    
+    
     
     VM vm = {};
     
-    vm.memory = bc.start;
+    int f = find_function(&compiler, "entry");
+    Function entry = compiler.functions[f];
     
-    dissassemble(bc.start, bc.at);
+    emit_call(&compiler, entry.address);
     
-    while(vm.pc < (bc.at - bc.start)){
+    vm.memory = compiler.start;
+    vm.pc = compiler.at - compiler.start-1;
+    
+    dissassemble(compiler.start, compiler.at);
+    while(vm.pc < (compiler.at - compiler.start)){
         
         instruction instr = vm.memory[vm.pc];
         
         int opcode = get_opcode(instr);
+        
+        bool jumped = 0;
         
         switch(opcode){
             
@@ -203,12 +206,14 @@ int main(){
             }break;
             
             case OP_JUMP_UNCONDITIONAL:{
+                jumped = true;
                 int address = get_address(instr);
                 vm.pc = address;
             }break;
             
             case OP_JUMP_ZERO:{
                 if(vm.zero){
+                    jumped = true;
                     int address = get_address(instr);
                     vm.pc = address;
                 }
@@ -216,6 +221,7 @@ int main(){
             
             case OP_JUMP_NOT_ZERO:{
                 if(!vm.zero){
+                    jumped = true;
                     int address = get_address(instr);
                     vm.pc = address;
                 }
@@ -223,6 +229,7 @@ int main(){
             
             case OP_JUMP_CARRY:{
                 if(vm.carry){
+                    jumped = true;
                     int address = get_address(instr);
                     vm.pc = address;
                 }
@@ -230,6 +237,7 @@ int main(){
             
             case OP_JUMP_NO_CARRY:{
                 if(!vm.carry){
+                    jumped = true;
                     int address = get_address(instr);
                     vm.pc = address;
                 }
@@ -237,6 +245,7 @@ int main(){
             
             case OP_JUMP_NEGATIVE:{
                 if(vm.negative){
+                    jumped = true;
                     int address = get_address(instr);
                     vm.pc = address;
                 }
@@ -244,6 +253,7 @@ int main(){
             
             case OP_JUMP_NOT_NEGATIVE:{
                 if(!vm.negative){
+                    jumped = true;
                     int address = get_address(instr);
                     vm.pc = address;
                 }
@@ -251,6 +261,7 @@ int main(){
             
             case OP_JUMP_POSITIVE:{
                 if(vm.positive){
+                    jumped = true;
                     int address = get_address(instr);
                     vm.pc = address;
                 }
@@ -258,6 +269,7 @@ int main(){
             
             case OP_JUMP_NOT_POSITIVE:{
                 if(!vm.positive){
+                    jumped = true;
                     int address = get_address(instr);
                     vm.pc = address;
                 }
@@ -265,6 +277,7 @@ int main(){
             
             case OP_JUMP_OVERFLOW:{
                 if(vm.overflow){
+                    jumped = true;
                     int address = get_address(instr);
                     vm.pc = address;
                 }
@@ -272,17 +285,20 @@ int main(){
             
             case OP_JUMP_NO_OVERFLOW:{
                 if(!vm.overflow){
+                    jumped = true;
                     int address = get_address(instr);
                     vm.pc = address;
                 }
             }break;
             
             case OP_JUMP_REGISTER:{
+                jumped = true;
                 int y = get_address(instr);
                 vm.pc = vm.registers[y];
             }break;
             
             case OP_CALL:{
+                jumped = true;
                 int address = get_call_address(instr);
                 vm.RD = vm.pc;
                 vm.pc = address;
@@ -293,8 +309,9 @@ int main(){
             }break;
             
         }
-        
-        vm.pc++;
+        if(!jumped) {
+            vm.pc += 1;
+        }
     }
     printf("RA: %d\n", vm.RA);
     printf("RB: %d\n", vm.RB);

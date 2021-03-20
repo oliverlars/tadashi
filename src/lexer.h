@@ -37,6 +37,16 @@ tokens_equal(Token a, Token b){
     return true;
 }
 
+internal bool
+token_equals_string(Token a, char* str){
+    auto length = strlen(str);
+    if(a.length != length) return false;
+    for(int i = 0; i < length; i++){
+        if(a.at[i] != str[i]) return false;
+    }
+    return true;
+}
+
 #define is_newline(x) ((x) == '\n' || (x) == '\r')
 #define is_whitespace(x) ((x) == ' ' || (x) == '\t' || (x) == '\v' || (x) == '\f' || is_newline(x))
 #define is_digit(x) ((x) <= '9' && (x) >= '0')

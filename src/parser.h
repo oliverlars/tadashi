@@ -13,6 +13,7 @@ enum Ast_Type {
     AST_DECLARATION,
     AST_SCOPE,
     AST_VALUE,
+    AST_RETURN,
 };
 
 enum Op_Type {
@@ -55,6 +56,10 @@ struct Ast_Node {
         struct {
             char number; 
         }value;
+        
+        struct {
+            Ast_Node* expr;
+        }ret;
     };
 };
 

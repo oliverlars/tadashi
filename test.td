@@ -1,12 +1,7 @@
-a = 101;
-b = a + 3*3;
-
-c = 2*(2 + 3);
-
-fn test_func(a, b, c) {
-    return a + b + c;
+fn entry() {
+	a = 10+3;
+	b = a + 1;
 }
 
-d = test_func(1, 2, 3);
 
 
