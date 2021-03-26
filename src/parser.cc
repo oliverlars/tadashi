@@ -54,6 +54,13 @@ make_return_node(){
     return ret;
 }
 
+internal Ast_Node*
+make_call_node(){
+    auto call = make_ast_node();
+    call->type = AST_FUNCTION_CALL;
+    return call;
+}
+
 internal int
 token_to_value(Token token){
     int result = 0;
@@ -73,10 +80,19 @@ parse_base_expr(Parser* p){
         get_token(&p->l);
         return expr;
     }
+    
     if(token.type == TOKEN_IDENTIFIER){
-        auto identifier = make_identifier_node();
-        identifier->name = token;
-        return identifier;
+        if(peek_token(&p->l).type == TOKEN_LEFT_PAREN){
+            auto call = make_call_node();
+            call->name = token;
+            get_token(&p->l);
+            get_token(&p->l); //HACK(Oliver): just to make the parser happy, 
+            // should parse arguments properly
+        }else {
+            auto identifier = make_identifier_node();
+            identifier->name = token;
+            return identifier;
+        }
     }
     
     if(token.type == TOKEN_NUMBER){
@@ -242,6 +258,81 @@ parse_global_scope(Parser* p){
     Ast_Node* scope = make_scope_node();
     
     scope->scope.members = parse_function(p);
-    //scope->scope.members->next = parse_function(p);
+    scope->scope.members->next = parse_function(p);
     return scope;
+}
+
+
+internal void
+pretty_print(FILE* file, Ast_Node* root, int indent=-1){
+    if(!root) return;
+    for(int i = 0; i < indent; i++){
+        fprintf(file, "  ");
+    }
+    switch(root->type){
+        
+        case AST_IDENTIFIER:{
+            fprintf(file, "%.*s", root->name.length, root->name.at);
+        }break;
+        
+        case AST_BINARY:{
+            fprintf(file, "(");
+            char* ops[] = { "+", "-", "*", "/" };
+            fprintf(file, "%s ", ops[root->binary.op_type]);
+            pretty_print(file, root->binary.left, indent);
+            pretty_print(file, root->binary.right, indent);
+            fprintf(file, ")");
+            
+        }break;
+        
+        case AST_FUNCTION: {
+            fprintf(file, "(");
+            fprintf(file, "function %.*s\n", root->name.length, root->name.at);
+            pretty_print(file, root->func.parameters);
+            pretty_print(file, root->func.body, indent);
+            fprintf(file, ")\n");
+        }break;
+        
+        case AST_FUNCTION_CALL: {
+            fprintf(file, "(");
+            fprintf(file, "call %.*s ", root->name.length, root->name.at);
+            pretty_print(file, root->call.arguments, indent);
+            fprintf(file, ")");
+        }break;
+        
+        case AST_UNARY: {
+            fprintf(file, "(");
+            char* ops[] = { "+", "-" };
+            fprintf(file, "%s ", ops[root->unary.op_type]);
+            pretty_print(file, root->unary.right, indent);
+            fprintf(file, ")");
+        }break;
+        
+        case AST_DECLARATION: {
+            fprintf(file, "(");
+            fprintf(file, "decl ");
+            fprintf(file, "%.*s", root->name.length, root->name.at);
+            pretty_print(file, root->decl.expr, indent);
+            fprintf(file, ")\n");
+        }break;
+        
+        case AST_SCOPE: {
+            auto member = root->scope.members;
+            for(;member; member = member->next){
+                pretty_print(file, member, indent+1);
+            }
+            
+        }break;
+        
+        case AST_VALUE: {
+            fprintf(file, "%d", root->value.number, indent);
+        }break;
+        
+        case AST_RETURN: {
+            fprintf(file, "(");
+            fprintf(file, "return ");
+            pretty_print(file, root->ret.expr, indent);
+            fprintf(file, ")");
+        }break;
+    }
 }

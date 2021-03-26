@@ -37,6 +37,7 @@ struct Ast_Node {
             Ast_Node* right;
         }binary;
         struct {
+            Op_Type op_type;
             Ast_Node* right;
         } unary;
         struct {
@@ -47,16 +48,15 @@ struct Ast_Node {
         } scope;
         struct {
             Ast_Node* func;
+            Ast_Node* arguments;
         } call;
         struct {
             Ast_Node* parameters;
             Ast_Node* body;
         } func;
-        
         struct {
-            char number; 
+            int number; 
         }value;
-        
         struct {
             Ast_Node* expr;
         }ret;

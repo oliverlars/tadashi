@@ -179,11 +179,37 @@ copy_temporary(Compiler* compiler, int address_x, int address_y){
     emit_store_absolute(compiler, RA, address_x);
 }
 
+internal int
+find_function(Compiler* compiler, Token name){
+    int i = 0;
+    for(; i < 256; i++){
+        if(tokens_equal(name, compiler->functions[i].name)){
+            return i;
+        }
+    }
+    return -1;
+}
+
+internal int
+find_function(Compiler* compiler, char* name){
+    int i = 0;
+    for(; i < 256; i++){
+        if(token_equals_string(compiler->functions[i].name, name)){
+            return i;
+        }
+    }
+    return -1;
+}
+
 //returns stack positions for variables/temporaries
 internal int
 compile_expression(Ast_Node* root, Register r, Compiler* compiler){
     assert(root);
     switch(root->type){
+        case AST_FUNCTION_CALL: {
+            emit_call(compiler, find_function(compiler, root->name));
+            
+        }break;
         case AST_VALUE: {
             //emit_move_absolute(compiler, r, root->value.number);
             return push_temporary(compiler, root->value.number);
@@ -235,28 +261,6 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
     int local = push_local(compiler, root->name, 0);
     int init = compile_expression(expr, RA, compiler);
     copy_temporary(compiler, local, init);
-}
-
-internal int
-find_function(Compiler* compiler, Token name){
-    int i = 0;
-    for(; i < 256; i++){
-        if(tokens_equal(name, compiler->functions[i].name)){
-            return i;
-        }
-    }
-    return -1;
-}
-
-internal int
-find_function(Compiler* compiler, char* name){
-    int i = 0;
-    for(; i < 256; i++){
-        if(token_equals_string(compiler->functions[i].name, name)){
-            return i;
-        }
-    }
-    return -1;
 }
 
 internal void

@@ -55,13 +55,16 @@ int main(){
     global_node_arena = make_arena(sizeof(Ast_Node)*4096);
     auto scope = parse_global_scope(&p);
     
+    FILE* file = fopen("ast.txt", "w");
+    pretty_print(file, scope);
+    
     Compiler compiler = {};
     // TODO(Oliver): use arena
     compiler.at = (instruction*)malloc(sizeof(instruction)*MEMORY_SIZE);
     compiler.start = compiler.at;
     
-    //compile_function(scope->scope.members, &compiler);
     compile_function(scope->scope.members, &compiler);
+    compile_function(scope->scope.members->next, &compiler);
     
     
     
