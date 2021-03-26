@@ -324,7 +324,13 @@ int main(){
     printf("\n");
     for(int i = 0; i < compiler.variable_count; i++){
         auto v = compiler.variables[i];
-        printf("%.*s: %d\n", v.name.length, v.name.at, vm.memory[v.address]);
+        if(v.is_array){
+            for(int j = 0; j < v.array_length; j++){
+                printf("$%d | %.*s[%d]: %d\n", v.address +j, v.name.length, v.name.at, j, vm.memory[v.address+j]);
+            }
+        }else{
+            printf("$%d | %.*s: %d\n", v.address, v.name.length, v.name.at, vm.memory[v.address]);
+        }
     }
     return 0;
 }

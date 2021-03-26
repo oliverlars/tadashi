@@ -68,6 +68,13 @@ make_for_node(){
     return _for;
 }
 
+internal Ast_Node*
+make_index_node(){
+    auto index = make_ast_node();
+    index->type = AST_INDEX;
+    return index;
+}
+
 internal int
 token_to_value(Token token){
     int result = 0;
@@ -95,6 +102,12 @@ parse_base_expr(Parser* p){
             get_token(&p->l);
             get_token(&p->l); //HACK(Oliver): just to make the parser happy, 
             // should parse arguments properly
+        }else if(peek_token(&p->l).type == TOKEN_LEFT_BRACKET){
+            get_token(&p->l);
+            auto index = make_index_node();
+            index->name = token;
+            index->index.offset = parse_expr(p);
+            expect_token(&p->l, TOKEN_RIGHT_BRACKET);
         }else {
             auto identifier = make_identifier_node();
             identifier->name = token;
@@ -175,8 +188,21 @@ internal Ast_Node*
 parse_decl(Parser* p){
     auto decl = make_declaration_node();
     //get_token(&p->l); // equals
+    
+    if(peek_token(&p->l).type == TOKEN_LEFT_BRACKET){
+        get_token(&p->l);
+        decl->decl.offset = parse_expr(p);
+        expect_token(&p->l, TOKEN_RIGHT_BRACKET);
+    }
+    
     expect_token(&p->l, TOKEN_EQUALS);
-    decl->decl.expr = parse_expr(p);
+    if(peek_token(&p->l).type == TOKEN_LEFT_BRACKET){
+        get_token(&p->l);
+        decl->decl.array_length = token_to_value(expect_token(&p->l, TOKEN_NUMBER));
+        expect_token(&p->l, TOKEN_RIGHT_BRACKET);
+    }else {
+        decl->decl.expr = parse_expr(p);
+    }
     return decl;
 }
 
@@ -202,9 +228,9 @@ parse_for(Parser* p){
     auto min = parse_expr(p);
     expect_keyword(&p->l, "to");
     auto max = parse_expr(p);
-    expect_token(&p->l, TOKEN_LEFT_BRACKET);
+    expect_token(&p->l, TOKEN_LEFT_BRACE);
     auto body = parse_scope(p);
-    expect_token(&p->l, TOKEN_RIGHT_BRACKET);
+    expect_token(&p->l, TOKEN_RIGHT_BRACE);
     auto _for = make_for_node();
     _for->_for.min = min;
     _for->_for.max = max;
@@ -260,9 +286,9 @@ parse_function(Parser* p){
         }
     }
     get_token(&p->l);
-    auto left_bracket = expect_token(&p->l, TOKEN_LEFT_BRACKET);
+    auto left_bracket = expect_token(&p->l, TOKEN_LEFT_BRACE);
     auto scope = parse_scope(p);
-    auto right_bracket = expect_token(&p->l, TOKEN_RIGHT_BRACKET);
+    auto right_bracket = expect_token(&p->l, TOKEN_RIGHT_BRACE);
     func->func.body = scope;
     
     return func;
@@ -300,23 +326,25 @@ parse_global_scope(Parser* p){
 
 
 internal void
-pretty_print(FILE* file, Ast_Node* root, int indent=-1){
+pretty_print(FILE* file, Ast_Node* root, int indent=0){
     if(!root) return;
-    for(int i = 0; i < indent; i++){
-        fprintf(file, "  ");
+    if(root->type != AST_SCOPE){
+        for(int i = 0; i < indent; i++){
+            fprintf(file, "  ");
+        }
     }
     switch(root->type){
         
         case AST_IDENTIFIER:{
-            fprintf(file, "%.*s", root->name.length, root->name.at);
+            fprintf(file, "%.*s ", root->name.length, root->name.at);
         }break;
         
         case AST_BINARY:{
             fprintf(file, "(");
             char* ops[] = { "+", "-", "*", "/" };
             fprintf(file, "%s ", ops[root->binary.op_type]);
-            pretty_print(file, root->binary.left, indent);
-            pretty_print(file, root->binary.right, indent);
+            pretty_print(file, root->binary.left);
+            pretty_print(file, root->binary.right);
             fprintf(file, ")");
             
         }break;
@@ -325,7 +353,7 @@ pretty_print(FILE* file, Ast_Node* root, int indent=-1){
             fprintf(file, "(");
             fprintf(file, "function %.*s\n", root->name.length, root->name.at);
             pretty_print(file, root->func.parameters);
-            pretty_print(file, root->func.body, indent);
+            pretty_print(file, root->func.body, indent+1);
             fprintf(file, ")\n");
         }break;
         
@@ -348,35 +376,36 @@ pretty_print(FILE* file, Ast_Node* root, int indent=-1){
             fprintf(file, "(");
             fprintf(file, "decl ");
             fprintf(file, "%.*s", root->name.length, root->name.at);
-            pretty_print(file, root->decl.expr, indent);
+            pretty_print(file, root->decl.expr, 0);
             fprintf(file, ")\n");
         }break;
         
         case AST_SCOPE: {
             auto member = root->scope.members;
             for(;member; member = member->next){
-                pretty_print(file, member, indent+1);
+                pretty_print(file, member, indent);
             }
             
         }break;
         
         case AST_VALUE: {
-            fprintf(file, "%d", root->value.number, indent);
+            fprintf(file, "%d ", root->value.number);
         }break;
         
         case AST_RETURN: {
             fprintf(file, "(");
             fprintf(file, "return ");
-            pretty_print(file, root->ret.expr, indent);
+            pretty_print(file, root->ret.expr, 0);
             fprintf(file, ")");
         }break;
         
         case AST_FOR: {
             fprintf(file, "(");
-            fprintf(file, "for");
-            pretty_print(file, root->_for.min, indent);
-            pretty_print(file, root->_for.max, indent);
-            pretty_print(file, root->_for.body, indent);
+            fprintf(file, "for ");
+            pretty_print(file, root->_for.min);
+            pretty_print(file, root->_for.max);
+            fprintf(file, "\n");
+            pretty_print(file, root->_for.body, indent+1);
             fprintf(file, ")");
         }break;
     }

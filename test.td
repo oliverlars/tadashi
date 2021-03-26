@@ -3,12 +3,10 @@ fn test() {
 }
 
 fn entry() {
-	dad = 0;
-	b = 20;
-	c = 0;
-	d = 101;
-	for dad to b {
-		c = c + 1;
-		d = d - 10;
+	a = [10];
+	index = 0;
+	for 1 to 10 {
+		a[index] = 1 + (index+1)*(index+1);
+		index = index + 1;
 	}
 }

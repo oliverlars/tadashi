@@ -2,6 +2,8 @@
 struct Variable {
     Token name;
     int address;
+    bool is_array;
+    int array_length;
 };
 
 struct Function {

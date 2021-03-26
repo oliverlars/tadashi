@@ -35,16 +35,22 @@ get_token(Lexer* l){
             token.type = TOKEN_SEMICOLON;
         }break;
         case '}':{
-            token.type = TOKEN_RIGHT_BRACKET;
+            token.type = TOKEN_RIGHT_BRACE;
         }break;
         case '{':{
-            token.type = TOKEN_LEFT_BRACKET;
+            token.type = TOKEN_LEFT_BRACE;
         }break;
         case '(':{
             token.type = TOKEN_LEFT_PAREN;
         }break;
         case ')':{
             token.type = TOKEN_RIGHT_PAREN;
+        }break;
+        case ']':{
+            token.type = TOKEN_RIGHT_BRACKET;
+        }break;
+        case '[':{
+            token.type = TOKEN_LEFT_BRACKET;
         }break;
         case '+':{
             token.type = TOKEN_PLUS;

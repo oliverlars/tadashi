@@ -57,6 +57,14 @@ emit_store_register(Compiler* compiler, Register x, Register y){
 }
 
 internal void
+emit_load_register(Compiler* compiler, Register x, Register y){
+    *compiler->at = OP_LOAD_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
+    *compiler->at += (int)y << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    compiler->at++;
+}
+
+internal void
 emit_add_register(Compiler* compiler, Register x, Register y){
     *compiler->at = OP_ADD_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
@@ -75,6 +83,13 @@ emit_sub_register(Compiler* compiler, Register x, Register y){
 internal void
 emit_jump_not_zero(Compiler* compiler, int address){
     *compiler->at = OP_JUMP_NOT_ZERO << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += address;
+    compiler->at++;
+}
+
+internal void
+emit_jump_positive(Compiler* compiler, int address){
+    *compiler->at = OP_JUMP_POSITIVE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += address;
     compiler->at++;
 }
@@ -135,6 +150,21 @@ push_local(Compiler* compiler, Token name, int value){
     compiler->variables[compiler->variable_count].address = compiler->stack_ptr;
     compiler->variable_count++;
     return compiler->stack_ptr++;
+}
+
+internal int
+push_array(Compiler* compiler, Token name, int size){
+    int array = compiler->stack_ptr;
+    for(int i = 0; i < size; i++){
+        emit_move_absolute(compiler, RA, 0);
+        emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
+    }
+    compiler->variables[compiler->variable_count].name = name;
+    compiler->variables[compiler->variable_count].address = array;
+    compiler->variables[compiler->variable_count].is_array = true;
+    compiler->variables[compiler->variable_count].array_length = size;
+    compiler->variable_count++;
+    return array;
 }
 
 internal void
@@ -210,6 +240,9 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             emit_call(compiler, find_function(compiler, root->name));
             
         }break;
+        case AST_INDEX: {
+            
+        }break;
         case AST_VALUE: {
             //emit_move_absolute(compiler, r, root->value.number);
             return push_temporary(compiler, root->value.number);
@@ -228,14 +261,17 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     sub_temporaries(compiler, result, b);
                 }break;
                 case OP_MUL:{
-                    sub_temporary_absolute(compiler, b, 1);
+                    printf("mul start: %d\n", compiler->at - compiler->start);
+                    int count = duplicate_temporary(compiler, b);
+                    sub_temporary_absolute(compiler, count, 1);
                     auto jump = compiler->at;
                     
                     add_temporaries(compiler, result, a);
                     
-                    sub_temporary_absolute(compiler, b, 1);
+                    sub_temporary_absolute(compiler, count, 1);
                     
-                    emit_jump_not_zero(compiler, jump - compiler->start);
+                    emit_jump_positive(compiler, jump - compiler->start);
+                    printf("mul end: %d\n", compiler->at - compiler->start);
                 }break;
                 
             }
@@ -246,7 +282,6 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
         case AST_IDENTIFIER: {
             int local = find_local(compiler, root->name);
             assert(local >= 0);
-            printf("line number for load a %d\n", compiler->at - compiler->start);
             return compiler->variables[local].address;
         }break;
     }
@@ -287,14 +322,30 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
     if(variable < 0){
         auto decl = root->decl;
         auto expr = decl.expr;
-        int local = push_local(compiler, root->name, 0);
-        int init = compile_expression(expr, RA, compiler);
-        copy_temporary(compiler, local, init);
+        if(expr){
+            int local = push_local(compiler, root->name, 0);
+            int init = compile_expression(expr, RA, compiler);
+            copy_temporary(compiler, local, init);
+        }else {
+            push_array(compiler, root->name, decl.array_length);
+        }
     }else {
         auto decl = root->decl;
-        auto expr = decl.expr;
-        int init = compile_expression(expr, RA, compiler);
-        copy_temporary(compiler, compiler->variables[variable].address, init);
+        
+        if(compiler->variables[variable].is_array){
+            auto offset = push_temporary(compiler, 0);
+            auto offset_expr = compile_expression(decl.offset, RA, compiler);
+            copy_temporary(compiler, offset, offset_expr);
+            add_temporary_absolute(compiler, offset, compiler->variables[variable].address);
+            auto init = compile_expression(decl.expr, RA, compiler);
+            emit_load_absolute(compiler, RA, offset);
+            emit_load_absolute(compiler, RB, init);
+            emit_store_register(compiler, RB, RA);
+        }else {
+            auto expr = decl.expr;
+            int init = compile_expression(expr, RA, compiler);
+            copy_temporary(compiler, compiler->variables[variable].address, init);
+        }
     }
 }
 

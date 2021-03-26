@@ -15,6 +15,7 @@ enum Ast_Type {
     AST_VALUE,
     AST_RETURN,
     AST_FOR,
+    AST_INDEX,
 };
 
 enum Op_Type {
@@ -22,6 +23,11 @@ enum Op_Type {
     OP_SUB,
     OP_MUL,
     OP_DIV,
+};
+
+enum Prim_Type {
+    PRIM_INT,
+    PRIM_ARRAY,
 };
 
 struct Ast_Node {
@@ -43,7 +49,8 @@ struct Ast_Node {
         } unary;
         struct {
             Ast_Node* expr;
-            bool is_reassign;
+            int array_length;
+            Ast_Node* offset;
         } decl;
         struct {
             Ast_Node* members;
@@ -67,6 +74,9 @@ struct Ast_Node {
             Ast_Node* max;
             Ast_Node* body;
         }_for;
+        struct {
+            Ast_Node* offset;
+        }index;
     };
 };
 
