@@ -166,14 +166,10 @@ parse_expr(Parser* p){
 
 internal Ast_Node*
 parse_decl(Parser* p){
-    auto token = get_token(&p->l);
     auto decl = make_declaration_node();
-    decl->name = token;
     //get_token(&p->l); // equals
-    if(token_equals_string(peek_token(&p->l), "=")){
-        get_token(&p->l);
-        decl->decl.expr = parse_expr(p);
-    }
+    expect_token(&p->l, TOKEN_EQUALS);
+    decl->decl.expr = parse_expr(p);
     return decl;
 }
 
@@ -187,14 +183,26 @@ parse_return(Parser* p){
 }
 
 internal Ast_Node*
+parse_call(Parser* p){
+    return nullptr;
+}
+
+internal Ast_Node*
 parse_stmt(Parser* p){
     Ast_Node* stmt;
-    if(token_equals_string(peek_token(&p->l), "return")){
+    Token peek = peek_token(&p->l);
+    if(token_equals_string(peek, "return")){
         stmt = parse_return(p);
-    }else {
-        stmt = parse_decl(p);
+    }else if(peek.type == TOKEN_IDENTIFIER){
+        auto name = get_token(&p->l);
+        if(peek_token(&p->l).type == TOKEN_LEFT_PAREN){
+            stmt = parse_call(p);
+        }else {
+            stmt = parse_decl(p);
+        }
+        stmt->name = name;
     }
-    get_token(&p->l); //semicolon
+    expect_token(&p->l, TOKEN_SEMICOLON); //semicolon
     return stmt;
 }
 
@@ -208,7 +216,7 @@ parse_function(Parser* p){
     auto func = make_function_node();
     func->name = name;
     
-    get_token(&p->l); //left paren
+    expect_token(&p->l, TOKEN_LEFT_PAREN);
     Token right_paren = {};
     right_paren.at = ")"; 
     right_paren.length = 1;
@@ -224,9 +232,9 @@ parse_function(Parser* p){
         }
     }
     get_token(&p->l);
-    auto left_bracket = get_token(&p->l);
+    auto left_bracket = expect_token(&p->l, TOKEN_LEFT_BRACKET);
     auto scope = parse_scope(p);
-    auto right_bracket = get_token(&p->l);
+    auto right_bracket = expect_token(&p->l, TOKEN_RIGHT_BRACKET);
     func->func.body = scope;
     
     return func;

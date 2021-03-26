@@ -84,3 +84,13 @@ peek_token(Lexer* l){
     auto token = get_token(&l2);
     return token;
 }
+
+internal Token
+expect_token(Lexer* l, Token_Type type){
+    Token peek = peek_token(l);
+    if(peek.type != type){
+        printf("expected token %s but got %.*s", token_types[type], peek.length, peek.at);
+        exit(0);
+    }
+    return get_token(l);
+}

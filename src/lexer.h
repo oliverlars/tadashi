@@ -22,6 +22,24 @@ enum Token_Type {
     TOKEN_NUMBER,
 };
 
+char* token_types[] = {
+    "INVALID",
+    "EOF",
+    ";",
+    ",",
+    "=",
+    "{",
+    "}",
+    ")",
+    "(",
+    "/",
+    "*",
+    "-",
+    "+",
+    "IDENTIFIER",
+    "NUMBER"
+};
+
 struct Token {
     char* at;
     int length;

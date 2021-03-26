@@ -42,6 +42,7 @@ struct Ast_Node {
         } unary;
         struct {
             Ast_Node* expr;
+            bool is_reassign;
         } decl;
         struct {
             Ast_Node* members;
