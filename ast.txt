@@ -1,8 +1,10 @@
 (function test
   (return   (+   (+   1  2)  3)))
 (function entry
-  (decl a  0)
+  (decl dad  0)
   (decl b  20)
   (decl c  0)
-  (for  a  b      (decl c    (+     c    1))
+  (decl d  101)
+  (for  dad  b      (decl c    (+     c    1))
+    (decl d    (-     d    10))
 ))

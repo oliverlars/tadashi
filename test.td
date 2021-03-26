@@ -3,10 +3,12 @@ fn test() {
 }
 
 fn entry() {
-	a = 0;
+	dad = 0;
 	b = 20;
 	c = 0;
-	for a to b {
+	d = 101;
+	for dad to b {
 		c = c + 1;
+		d = d - 10;
 	}
 }
