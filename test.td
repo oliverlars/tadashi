@@ -3,6 +3,6 @@ fn test() {
 }
 
 fn entry() {
-	a = 10+3;
-	b = a + 1;
+	a = 0;
+	a = a + 1;
 }

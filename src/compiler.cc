@@ -256,11 +256,19 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
 
 internal void
 compile_declaration(Ast_Node* root, Compiler* compiler){
-    auto decl = root->decl;
-    auto expr = decl.expr;
-    int local = push_local(compiler, root->name, 0);
-    int init = compile_expression(expr, RA, compiler);
-    copy_temporary(compiler, local, init);
+    int variable = find_local(compiler, root->name);
+    if(variable < 0){
+        auto decl = root->decl;
+        auto expr = decl.expr;
+        int local = push_local(compiler, root->name, 0);
+        int init = compile_expression(expr, RA, compiler);
+        copy_temporary(compiler, local, init);
+    }else {
+        auto decl = root->decl;
+        auto expr = decl.expr;
+        int init = compile_expression(expr, RA, compiler);
+        copy_temporary(compiler, compiler->variables[variable].address, init);
+    }
 }
 
 internal void
