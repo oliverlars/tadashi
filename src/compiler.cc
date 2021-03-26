@@ -253,6 +253,33 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
     return -1;
 }
 
+internal void
+compile_declaration(Ast_Node* root, Compiler* compiler);
+
+internal void
+compile_for(Ast_Node* root, Compiler* compiler){
+    int min = compile_expression(root->_for.min, RA, compiler);
+    int max = compile_expression(root->_for.max, RA, compiler);
+    sub_temporaries(compiler, max, min);
+    int count = max; //result of sub_temporaries is stored in min
+    int jump_location = compiler->at - compiler->start;
+    auto scope = root->_for.body;
+    auto member = scope->scope.members;
+    while(member){
+        switch(member->type){
+            case AST_DECLARATION:{
+                compile_declaration(member, compiler);
+            }break;
+            case AST_RETURN:{
+                compile_expression(member->ret.expr, RA, compiler);
+            }break;
+        }
+        member = member->next;
+    }
+    sub_temporary_absolute(compiler, count, 1);
+    emit_jump_not_zero(compiler, jump_location);
+}
+
 
 internal void
 compile_declaration(Ast_Node* root, Compiler* compiler){
@@ -287,8 +314,12 @@ compile_function(Ast_Node* root, Compiler* compiler){
             case AST_RETURN:{
                 compile_expression(member->ret.expr, RA, compiler);
             }break;
+            case AST_FOR: {
+                compile_for(member, compiler);
+            }break;
         }
         member = member->next;
     }
+    
     emit_ret(compiler);
 }

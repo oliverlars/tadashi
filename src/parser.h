@@ -14,6 +14,7 @@ enum Ast_Type {
     AST_SCOPE,
     AST_VALUE,
     AST_RETURN,
+    AST_FOR,
 };
 
 enum Op_Type {
@@ -61,6 +62,11 @@ struct Ast_Node {
         struct {
             Ast_Node* expr;
         }ret;
+        struct {
+            Ast_Node* min;
+            Ast_Node* max;
+            Ast_Node* body;
+        }_for;
     };
 };
 

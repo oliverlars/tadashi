@@ -4,5 +4,9 @@ fn test() {
 
 fn entry() {
 	a = 0;
-	a = a + 1;
+	b = 20;
+	c = 0;
+	for a to b {
+		c = c + 1;
+	}
 }

@@ -61,6 +61,13 @@ make_call_node(){
     return call;
 }
 
+internal Ast_Node*
+make_for_node(){
+    auto _for = make_ast_node();
+    _for->type = AST_FOR;
+    return _for;
+}
+
 internal int
 token_to_value(Token token){
     int result = 0;
@@ -187,26 +194,47 @@ parse_call(Parser* p){
     return nullptr;
 }
 
+Ast_Node* parse_scope(Parser* p);
+
+internal Ast_Node*
+parse_for(Parser* p){
+    get_token(&p->l);
+    auto min = parse_expr(p);
+    expect_keyword(&p->l, "to");
+    auto max = parse_expr(p);
+    expect_token(&p->l, TOKEN_LEFT_BRACKET);
+    auto body = parse_scope(p);
+    expect_token(&p->l, TOKEN_RIGHT_BRACKET);
+    auto _for = make_for_node();
+    _for->_for.min = min;
+    _for->_for.max = max;
+    _for->_for.body = body;
+    return _for;
+}
+
+
 internal Ast_Node*
 parse_stmt(Parser* p){
     Ast_Node* stmt;
     Token peek = peek_token(&p->l);
     if(token_equals_string(peek, "return")){
         stmt = parse_return(p);
+        expect_token(&p->l, TOKEN_SEMICOLON); //semicolon
+    }else if(token_equals_string(peek, "for")){
+        stmt = parse_for(p);
     }else if(peek.type == TOKEN_IDENTIFIER){
         auto name = get_token(&p->l);
         if(peek_token(&p->l).type == TOKEN_LEFT_PAREN){
             stmt = parse_call(p);
+            expect_token(&p->l, TOKEN_SEMICOLON); //semicolon
         }else {
             stmt = parse_decl(p);
+            expect_token(&p->l, TOKEN_SEMICOLON); //semicolon
         }
         stmt->name = name;
     }
-    expect_token(&p->l, TOKEN_SEMICOLON); //semicolon
     return stmt;
 }
-
-Ast_Node* parse_scope(Parser* p);
 
 internal Ast_Node*
 parse_function(Parser* p){
@@ -340,6 +368,15 @@ pretty_print(FILE* file, Ast_Node* root, int indent=-1){
             fprintf(file, "(");
             fprintf(file, "return ");
             pretty_print(file, root->ret.expr, indent);
+            fprintf(file, ")");
+        }break;
+        
+        case AST_FOR: {
+            fprintf(file, "(");
+            fprintf(file, "for");
+            pretty_print(file, root->_for.min, indent);
+            pretty_print(file, root->_for.max, indent);
+            pretty_print(file, root->_for.body, indent);
             fprintf(file, ")");
         }break;
     }

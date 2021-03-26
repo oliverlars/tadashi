@@ -94,3 +94,13 @@ expect_token(Lexer* l, Token_Type type){
     }
     return get_token(l);
 }
+
+internal Token
+expect_keyword(Lexer* l, char* str){
+    Token peek = peek_token(l);
+    if(!token_equals_string(peek, str)){
+        printf("expected keyword %s but got %.*s", str, peek.length, peek.at);
+        exit(0);
+    }
+    return get_token(l);
+}

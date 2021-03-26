@@ -2,5 +2,7 @@
   (return   (+   (+   1  2)  3)))
 (function entry
   (decl a  0)
-  (decl a  (+   a  1))
-)
+  (decl b  20)
+  (decl c  0)
+  (for  a  b      (decl c    (+     c    1))
+))
