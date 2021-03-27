@@ -2,8 +2,7 @@
   (return (+ (+ 1 2 )3 )))
 (function entry
   (decl a)
-  (decl index0 )
-  (for 1 10 
-    (decl a(+ 1 (* (+ index 1 )(+ index 1 ))))
-    (decl index(+ index 1 ))
-))
+  (decl a50 )
+  (decl a20 )
+  (decl potato(+ ))
+)

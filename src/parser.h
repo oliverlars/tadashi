@@ -23,6 +23,12 @@ enum Op_Type {
     OP_SUB,
     OP_MUL,
     OP_DIV,
+    OP_LT,
+    OP_GT,
+    OP_LTE,
+    OP_GTE,
+    OP_NOT,
+    OP_EQ,
 };
 
 enum Prim_Type {

@@ -238,10 +238,18 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
     switch(root->type){
         case AST_FUNCTION_CALL: {
             emit_call(compiler, find_function(compiler, root->name));
+            return push_temporary_from_register(compiler, RA);
             
         }break;
         case AST_INDEX: {
-            
+            int variable = find_local(compiler, root->name);
+            auto offset = push_temporary(compiler, 0);
+            auto offset_expr = compile_expression(root->index.offset, RA, compiler);
+            copy_temporary(compiler, offset, offset_expr);
+            add_temporary_absolute(compiler, offset, compiler->variables[variable].address);
+            emit_load_absolute(compiler, RB, offset);
+            emit_load_register(compiler, RA, RA);
+            return push_temporary_from_register(compiler, RA);
         }break;
         case AST_VALUE: {
             //emit_move_absolute(compiler, r, root->value.number);
@@ -292,13 +300,10 @@ internal void
 compile_declaration(Ast_Node* root, Compiler* compiler);
 
 internal void
-compile_for(Ast_Node* root, Compiler* compiler){
-    int min = compile_expression(root->_for.min, RA, compiler);
-    int max = compile_expression(root->_for.max, RA, compiler);
-    sub_temporaries(compiler, max, min);
-    int count = max; //result of sub_temporaries is stored in min
-    int jump_location = compiler->at - compiler->start;
-    auto scope = root->_for.body;
+compile_for(Ast_Node* root, Compiler* compiler);
+
+internal void
+compile_scope(Ast_Node* scope, Compiler* compiler){
     auto member = scope->scope.members;
     while(member){
         switch(member->type){
@@ -306,11 +311,25 @@ compile_for(Ast_Node* root, Compiler* compiler){
                 compile_declaration(member, compiler);
             }break;
             case AST_RETURN:{
-                compile_expression(member->ret.expr, RA, compiler);
+                int ret = compile_expression(member->ret.expr, RA, compiler);
+                emit_load_absolute(compiler, RA, ret);
+            }break;
+            case AST_FOR: {
+                compile_for(member, compiler);
             }break;
         }
         member = member->next;
     }
+}
+
+internal void
+compile_for(Ast_Node* root, Compiler* compiler){
+    int min = compile_expression(root->_for.min, RA, compiler);
+    int max = compile_expression(root->_for.max, RA, compiler);
+    sub_temporaries(compiler, max, min);
+    int count = max; //result of sub_temporaries is stored in min
+    int jump_location = compiler->at - compiler->start;
+    compile_scope(root->_for.body, compiler);
     sub_temporary_absolute(compiler, count, 1);
     emit_jump_not_zero(compiler, jump_location);
 }
@@ -354,23 +373,6 @@ compile_function(Ast_Node* root, Compiler* compiler){
     auto function = &compiler->functions[compiler->function_count++];
     function->name = root->name;
     function->address = compiler->at - compiler->start;
-    
-    auto scope = root->func.body;
-    auto member = scope->scope.members;
-    while(member){
-        switch(member->type){
-            case AST_DECLARATION:{
-                compile_declaration(member, compiler);
-            }break;
-            case AST_RETURN:{
-                compile_expression(member->ret.expr, RA, compiler);
-            }break;
-            case AST_FOR: {
-                compile_for(member, compiler);
-            }break;
-        }
-        member = member->next;
-    }
-    
+    compile_scope(root->func.body, compiler);
     emit_ret(compiler);
 }

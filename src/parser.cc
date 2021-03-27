@@ -101,6 +101,7 @@ parse_base_expr(Parser* p){
             call->name = token;
             get_token(&p->l);
             get_token(&p->l); //HACK(Oliver): just to make the parser happy, 
+            return call;
             // should parse arguments properly
         }else if(peek_token(&p->l).type == TOKEN_LEFT_BRACKET){
             get_token(&p->l);
@@ -108,6 +109,7 @@ parse_base_expr(Parser* p){
             index->name = token;
             index->index.offset = parse_expr(p);
             expect_token(&p->l, TOKEN_RIGHT_BRACKET);
+            return index;
         }else {
             auto identifier = make_identifier_node();
             identifier->name = token;
