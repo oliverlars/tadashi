@@ -4,5 +4,5 @@
 (function function_two
   (return (+ (+ 1 2 )3 )))
 (function entry
-  (decl a0 )
+  (decl a1 )
   )

@@ -423,7 +423,8 @@ compile_if(Ast_Node* root, Compiler* compiler);
 
 
 internal void
-compile_scope(Ast_Node* scope, Compiler* compiler){
+compile_scope_keep_variables(Ast_Node* scope, Compiler* compiler){
+    
     auto member = scope->scope.members;
     while(member){
         switch(member->type){
@@ -446,12 +447,20 @@ compile_scope(Ast_Node* scope, Compiler* compiler){
 }
 
 internal void
+compile_scope(Ast_Node* scope, Compiler* compiler){
+    int variable_count = compiler->variable_count;
+    compile_scope_keep_variables(scope, compiler);
+    compiler->variable_count = variable_count;
+}
+
+internal void
 compile_for(Ast_Node* root, Compiler* compiler){
     int min = compile_expression(root->_for.min, RA, compiler);
     int max = compile_expression(root->_for.max, RA, compiler);
     sub_temporaries(compiler, max, min);
     int count = max; //result of sub_temporaries is stored in min
     int jump_location = compiler->at - compiler->start;
+    
     compile_scope(root->_for.body, compiler);
     sub_temporary_absolute(compiler, count, 1);
     emit_jump_not_zero(compiler, jump_location);
@@ -513,9 +522,10 @@ compile_function(Ast_Node* root, Compiler* compiler){
     function->name = root->name;
     function->address = compiler->at - compiler->start;
     int variables = compiler->variable_count;
-    compile_scope(root->func.body, compiler);
-    emit_return_function(compiler);
-    if(!token_equals_string(root->name, "entry")){
-        compiler->variable_count = variables;
+    if(token_equals_string(root->name, "entry")){
+        compile_scope_keep_variables(root->func.body, compiler);
+    }else {
+        compile_scope(root->func.body, compiler);
     }
+    emit_return_function(compiler);
 }

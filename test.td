@@ -8,11 +8,14 @@ fn function_two() {
 }
 
 fn entry() {
-	a = 0;
-	if 1 {
-		a = 1;
+	a = 1;
+	if a < 2 {
+		for 0 to 10 {
+			a = a + 1;
+		}
+		a = a + function_one();
 	}else {
-		a = 2;
+		a = function_two();
 	}
 }
 
@@ -20,9 +23,9 @@ fn entry() {
 // and also strings (syntactic sugar around arrays)
 // add unary - and +
 //parse all functions (currently is hard coded to the above 3)
-// add if/else if/else statements
 // while loops
 // add divides!!!!!
+// output debug info like where each block starts/ends (functions, ifs, fors, etc)
 
 // 21 < 6
 // 21 - 6
