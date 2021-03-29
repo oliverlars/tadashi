@@ -27,7 +27,7 @@ enum Op_Type {
     OP_GT,
     OP_LTE,
     OP_GTE,
-    OP_NOT,
+    OP_NOT_EQ,
     OP_EQ,
 };
 

@@ -1,11 +1,8 @@
-(function test
+(function function_one
   (decl x20 )
   (return (+ x 1 )))
-(function test_
+(function function_two
   (return (+ (+ 1 2 )3 )))
 (function entry
-  (decl a)
-  (decl a(+ (call test )(call test_ )))
-  (decl x10 )
-  (decl a(+ x 2 ))
-  (return (+ x 2 )))
+  (decl a(< 1 2 ))
+)

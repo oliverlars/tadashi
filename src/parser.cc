@@ -160,13 +160,17 @@ internal Ast_Node*
 parse_binary_expr(Parser* p){
     auto expr = parse_mul_expr(p);
     
-    while((peek_token(&p->l).type == TOKEN_PLUS) || 
-          (peek_token(&p->l).type == TOKEN_MINUS)){
+    auto peek = peek_token(&p->l);
+    while((peek.type == TOKEN_PLUS) || 
+          (peek.type == TOKEN_MINUS) ||
+          (peek.type == TOKEN_LEFT_ANGLE)){
         auto bin = make_binary_node();
-        if(peek_token(&p->l).type == TOKEN_PLUS){
+        if(peek.type == TOKEN_PLUS){
             bin->binary.op_type = OP_ADD;
-        }else {
+        }else if(peek.type == TOKEN_MINUS){
             bin->binary.op_type = OP_SUB;
+        }else if(peek.type == TOKEN_LEFT_ANGLE){
+            bin->binary.op_type = OP_LT;
         }
         
         get_token(&p->l);
@@ -175,6 +179,7 @@ parse_binary_expr(Parser* p){
         bin->binary.right = parse_mul_expr(p);
         
         expr = bin;
+        peek = peek_token(&p->l);
     }
     
     return expr;
@@ -344,7 +349,7 @@ pretty_print(FILE* file, Ast_Node* root, int indent=0){
         
         case AST_BINARY:{
             fprintf(file, "(");
-            char* ops[] = { "+", "-", "*", "/" };
+            char* ops[] = { "+", "-", "*", "/", "<", ">", "<=", ">=", "!=", "==" };
             fprintf(file, "%s ", ops[root->binary.op_type]);
             pretty_print(file, root->binary.left);
             pretty_print(file, root->binary.right);

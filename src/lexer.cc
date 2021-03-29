@@ -12,6 +12,9 @@ gobble_whitespace(Lexer* l){
 }
 
 internal Token
+peek_token(Lexer* l);
+
+internal Token
 get_token(Lexer* l){
     
     gobble_whitespace(l);
@@ -25,8 +28,34 @@ get_token(Lexer* l){
         case 0:{
             token.type = TOKEN_EOF;
         }break;
+        case '!': {
+            if(peek_token(l).type == TOKEN_EQUALS){
+                token.type = TOKEN_BANG_EQUALS;
+            }else {
+                token.type = TOKEN_BANG;
+            }
+        }break;
+        case '<': {
+            if(peek_token(l).type == TOKEN_EQUALS){
+                token.type = TOKEN_LEFT_ANGLE_EQUAL;
+            }else {
+                token.type = TOKEN_LEFT_ANGLE;
+            }
+        }break;
+        case '>': {
+            if(peek_token(l).type == TOKEN_EQUALS){
+                token.type = TOKEN_RIGHT_ANGLE_EQUAL;
+            }else {
+                token.type = TOKEN_LEFT_ANGLE;
+            }
+        }break;
         case '=':{
-            token.type = TOKEN_EQUALS;
+            if(peek_token(l).type == TOKEN_EQUALS){
+                get_token(l);
+                token.type = TOKEN_EQUALS_EQUALS;
+            }else {
+                token.type = TOKEN_EQUALS;
+            }
         }break;
         case ',':{
             token.type = TOKEN_COMMA;

@@ -312,7 +312,6 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     sub_temporaries(compiler, result, b);
                 }break;
                 case OP_MUL:{
-                    printf("mul start: %d\n", compiler->at - compiler->start);
                     int count = duplicate_temporary(compiler, b);
                     sub_temporary_absolute(compiler, count, 1);
                     auto jump = compiler->at;
@@ -324,7 +323,13 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     emit_jump_positive(compiler, jump - compiler->start);
                     printf("mul end: %d\n", compiler->at - compiler->start);
                 }break;
-                
+                case OP_LT:{
+                    sub_temporaries(compiler, result, b);
+                    emit_move_absolute(compiler, RA, 0);
+                    emit_jump_positive(compiler, compiler->at - compiler->start +2);
+                    emit_move_absolute(compiler, RA, 1);
+                    emit_store_absolute(compiler, RA, result);
+                }break;
             }
             
             return result;
@@ -422,5 +427,7 @@ compile_function(Ast_Node* root, Compiler* compiler){
     int variables = compiler->variable_count;
     compile_scope(root->func.body, compiler);
     emit_return_function(compiler);
-    compiler->variable_count = variables;
+    if(!token_equals_string(root->name, "entry")){
+        compiler->variable_count = variables;
+    }
 }

@@ -20,6 +20,15 @@ enum Token_Type {
     TOKEN_ASTERISK,
     TOKEN_MINUS,
     TOKEN_PLUS,
+    
+    TOKEN_LEFT_ANGLE,
+    TOKEN_RIGHT_ANGLE,
+    TOKEN_BANG,
+    TOKEN_LEFT_ANGLE_EQUAL,
+    TOKEN_RIGHT_ANGLE_EQUAL,
+    TOKEN_EQUALS_EQUALS,
+    TOKEN_BANG_EQUALS,
+    
     TOKEN_IDENTIFIER,
     TOKEN_NUMBER,
 };
@@ -40,6 +49,13 @@ char* token_types[] = {
     "*",
     "-",
     "+",
+    "<",
+    ">",
+    "!",
+    "<=",
+    ">=",
+    "==",
+    "!=",
     "IDENTIFIER",
     "NUMBER"
 };
