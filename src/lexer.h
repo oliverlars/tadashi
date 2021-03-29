@@ -34,6 +34,11 @@ enum Token_Type {
     TOKEN_BAR,
     TOKEN_BAR_BAR,
     
+    TOKEN_RIGHT_ANGLE_RIGHT_ANGLE,
+    TOKEN_LEFT_ANGLE_LEFT_ANGLE,
+    
+    TOKEN_HAT,
+    
     TOKEN_IDENTIFIER,
     TOKEN_NUMBER,
 };
@@ -65,7 +70,10 @@ char* token_types[] = {
     "&&",
     "|",
     "||",
-    "IDENTIFIER",
+    "<<",
+    ">>"
+        "^"
+        "IDENTIFIER",
     "NUMBER"
 };
 

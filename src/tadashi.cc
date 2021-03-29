@@ -52,7 +52,7 @@ int main(){
     Lexer lexer = {};
     lexer.at = open_source("test.td");
     Parser p = {lexer};
-    global_node_arena = make_arena(sizeof(Ast_Node)*4096);
+    global_node_arena = make_arena(sizeof(Ast_Node)*8192*2);
     auto scope = parse_global_scope(&p);
     
     FILE* file = fopen("ast.txt", "w");
@@ -204,14 +204,12 @@ int main(){
             
             case OP_SR0_REGISTER:{
                 int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                vm.registers[x] = vm.registers[x] >> vm.registers[y];
+                vm.registers[x] = vm.registers[x] >> 1;
             }break;
             
             case OP_SL0_REGISTER:{
                 int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                vm.registers[x] = vm.registers[x] << vm.registers[y];
+                vm.registers[x] = vm.registers[x] << 1;
             }break;
             
             case OP_ROR_REGISTER:{
@@ -458,14 +456,12 @@ dissassemble(instruction* start, instruction* end) {
             
             case OP_SR0_REGISTER:{
                 int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                printf("sr0 %s, %s", reg[x], reg[y]);
+                printf("sr %s, %s", reg[x]);
             }break;
             
             case OP_SL0_REGISTER:{
                 int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                printf("sl0 %s, %s", reg[x], reg[y]);
+                printf("sl %s, 1", reg[x]);
             }break;
             
             case OP_ROR_REGISTER:{

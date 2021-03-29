@@ -16,7 +16,6 @@ peek_token(Lexer* l);
 
 internal Token
 get_token(Lexer* l){
-    
     gobble_whitespace(l);
     char c = *l->at;
     Token token = {};
@@ -25,33 +24,58 @@ get_token(Lexer* l){
     advance_lexer(l);
     
     switch(c){
+        
         case 0:{
             token.type = TOKEN_EOF;
         }break;
+        
         case '!': {
-            if(peek_token(l).type == TOKEN_EQUALS){
+            if(peek_token(l).type == TOKEN_EQUALS)
+            {
                 get_token(l);
                 token.type = TOKEN_BANG_EQUALS;
-            }else {
+            }
+            else 
+            {
                 token.type = TOKEN_BANG;
             }
+            
         }break;
+        
         case '<': {
-            if(peek_token(l).type == TOKEN_EQUALS){
+            if(peek_token(l).type == TOKEN_EQUALS)
+            {
                 get_token(l);
                 token.type = TOKEN_LEFT_ANGLE_EQUAL;
-            }else {
+            }
+            else if(peek_token(l).type == TOKEN_LEFT_ANGLE)
+            {
+                get_token(l);
+                token.type = TOKEN_LEFT_ANGLE_LEFT_ANGLE;
+            }
+            else
+            {
                 token.type = TOKEN_LEFT_ANGLE;
             }
         }break;
+        
         case '>': {
-            if(peek_token(l).type == TOKEN_EQUALS){
+            if(peek_token(l).type == TOKEN_EQUALS)
+            {
                 get_token(l);
                 token.type = TOKEN_RIGHT_ANGLE_EQUAL;
-            }else {
+            }
+            else if(peek_token(l).type == TOKEN_RIGHT_ANGLE)
+            {
+                get_token(l);
+                token.type = TOKEN_RIGHT_ANGLE_RIGHT_ANGLE;
+            }
+            else 
+            {
                 token.type = TOKEN_RIGHT_ANGLE;
             }
         }break;
+        
         case '=':{
             if(peek_token(l).type == TOKEN_EQUALS){
                 get_token(l);
@@ -92,6 +116,9 @@ get_token(Lexer* l){
         }break;
         case '*':{
             token.type = TOKEN_ASTERISK;
+        }break;
+        case '^':{
+            token.type = TOKEN_HAT;
         }break;
         case '-':{
             token.type = TOKEN_MINUS;

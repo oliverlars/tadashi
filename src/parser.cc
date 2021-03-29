@@ -149,12 +149,24 @@ parse_unary_expr(Parser* p){
 internal Ast_Node*
 parse_mul_expr(Parser* p){
     auto expr = parse_unary_expr(p);
+    auto peek = peek_token(&p->l);
     
-    while((peek_token(&p->l).type == TOKEN_ASTERISK ||
-           ((peek_token(&p->l).type == TOKEN_FORWARD_SLASH)))){
+    while(peek.type == TOKEN_ASTERISK ||
+          (peek.type == TOKEN_FORWARD_SLASH) ||
+          (peek.type == TOKEN_RIGHT_ANGLE_RIGHT_ANGLE) ||
+          (peek.type == TOKEN_LEFT_ANGLE_LEFT_ANGLE) ||
+          (peek.type == TOKEN_HAT)){
         auto bin = make_binary_node();
-        if(peek_token(&p->l).type == TOKEN_ASTERISK){
+        if(peek.type == TOKEN_ASTERISK){
             bin->binary.op_type = OP_MUL;
+        }
+        else if(peek.type == TOKEN_LEFT_ANGLE_LEFT_ANGLE){
+            bin->binary.op_type = OP_SL;
+        }
+        else if(peek.type == TOKEN_RIGHT_ANGLE_RIGHT_ANGLE){
+            bin->binary.op_type = OP_SR;
+        }else if(peek.type == TOKEN_HAT) {
+            bin->binary.op_type = OP_XOR;
         }else {
             bin->binary.op_type = OP_DIV;
         }
@@ -165,6 +177,7 @@ parse_mul_expr(Parser* p){
         bin->binary.right = parse_unary_expr(p);
         
         expr = bin;
+        peek = peek_token(&p->l);
     }
     
     return expr;

@@ -33,6 +33,9 @@ enum Op_Type {
     OP_EQ,
     OP_LOGICAL_AND,
     OP_LOGICAL_OR,
+    OP_SL,
+    OP_SR,
+    OP_XOR,
 };
 
 enum Prim_Type {
