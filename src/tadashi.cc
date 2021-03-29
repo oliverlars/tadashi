@@ -73,10 +73,14 @@ int main(){
     int f = find_function(&compiler, "entry");
     Function entry = compiler.functions[f];
     
-    emit_call(&compiler, entry.address);
+    auto start = compiler.at - compiler.start;
+    
+    emit_move_absolute(&compiler, RC, 1024); //function address pointer
+    
+    emit_jump_function(&compiler, "entry");
     
     vm.memory = compiler.start;
-    vm.pc = compiler.at - compiler.start-1;
+    vm.pc = start;
     
     dissassemble(compiler.start, compiler.at);
     while(vm.pc < (compiler.at - compiler.start)){
@@ -111,7 +115,7 @@ int main(){
             
             case OP_LOAD_ABSOLUTE:{
                 int r = get_register_x(instr);
-                int operand = get_operand(instr);
+                int operand = get_address(instr);
                 vm.registers[r] = vm.memory[operand];
             }break;
             
@@ -296,7 +300,7 @@ int main(){
             
             case OP_JUMP_REGISTER:{
                 jumped = true;
-                int y = get_address(instr);
+                int y = get_register_y(instr);
                 vm.pc = vm.registers[y];
             }break;
             
@@ -316,6 +320,7 @@ int main(){
             vm.pc += 1;
         }
     }
+    
     printf("RA: %d\n", vm.RA);
     printf("RB: %d\n", vm.RB);
     printf("RC: %d\n", vm.RC);
@@ -517,7 +522,7 @@ dissassemble(instruction* start, instruction* end) {
             }break;
             
             case OP_JUMP_REGISTER:{
-                int y = get_address(instr);
+                int y = get_register_y(instr);
                 printf("jumpr %s", reg[y]);
             }break;
             

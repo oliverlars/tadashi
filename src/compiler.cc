@@ -95,6 +95,13 @@ emit_jump_positive(Compiler* compiler, int address){
 }
 
 internal void
+emit_jump_register(Compiler* compiler, Register r){
+    *compiler->at = OP_JUMP_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += (int)r << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    compiler->at++;
+}
+
+internal void
 emit_ret(Compiler* compiler){
     *compiler->at = OP_RETURN << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     compiler->at++;
@@ -231,13 +238,44 @@ find_function(Compiler* compiler, char* name){
     return -1;
 }
 
+internal void
+emit_jump_function(Compiler* compiler, char* function){
+    int function_index = find_function(compiler, function);
+    assert(function_index >= 0);
+    auto f = compiler->functions[function_index];
+    emit_move_absolute(compiler, RD, compiler->at - compiler->start + 5);
+    emit_store_register(compiler, RD, RC);
+    emit_add_absolute(compiler, RC, 1);
+    emit_move_absolute(compiler, RD, f.address);
+    emit_jump_register(compiler, RD);
+}
+
+internal void
+emit_jump_function(Compiler* compiler, Token function){
+    int function_index = find_function(compiler, function);
+    assert(function_index >= 0);
+    auto f = compiler->functions[function_index];
+    emit_move_absolute(compiler, RD, compiler->at - compiler->start + 5);
+    emit_store_register(compiler, RD, RC);
+    emit_add_absolute(compiler, RC, 1);
+    emit_move_absolute(compiler, RD, f.address);
+    emit_jump_register(compiler, RD);
+}
+
+internal void
+emit_return_function(Compiler* compiler){
+    emit_sub_absolute(compiler, RC, 1);
+    emit_load_register(compiler, RD, RC);
+    emit_jump_register(compiler, RD);
+}
+
 //returns stack positions for variables/temporaries
 internal int
 compile_expression(Ast_Node* root, Register r, Compiler* compiler){
     assert(root);
     switch(root->type){
         case AST_FUNCTION_CALL: {
-            emit_call(compiler, find_function(compiler, root->name));
+            emit_jump_function(compiler, root->name);
             return push_temporary_from_register(compiler, RA);
             
         }break;
@@ -374,5 +412,5 @@ compile_function(Ast_Node* root, Compiler* compiler){
     function->name = root->name;
     function->address = compiler->at - compiler->start;
     compile_scope(root->func.body, compiler);
-    emit_ret(compiler);
+    emit_return_function(compiler);
 }

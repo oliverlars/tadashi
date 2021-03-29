@@ -2,7 +2,5 @@
   (return (+ (+ 1 2 )3 )))
 (function entry
   (decl a)
-  (decl a50 )
-  (decl a20 )
-  (decl potato(+ ))
+  (decl a(call test ))
 )
