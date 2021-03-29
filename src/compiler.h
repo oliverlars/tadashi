@@ -21,7 +21,7 @@ struct Compiler {
     Function functions[256];
     int function_count;
     
-    int stack_ptr = 256;
+    int stack_ptr = 512;
 };
 
 

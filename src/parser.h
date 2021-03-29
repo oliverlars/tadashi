@@ -17,6 +17,7 @@ enum Ast_Type {
     AST_FOR,
     AST_INDEX,
     AST_IF,
+    AST_WHILE,
 };
 
 enum Op_Type {
@@ -79,8 +80,9 @@ struct Ast_Node {
             Ast_Node* expr;
         }ret;
         struct {
-            Ast_Node* min;
-            Ast_Node* max;
+            Ast_Node* decl;
+            Ast_Node* cond;
+            Ast_Node* stmt;
             Ast_Node* body;
         }_for;
         struct {
@@ -92,7 +94,10 @@ struct Ast_Node {
             Ast_Node* else_if;
             Ast_Node* _else;
         }_if;
-        
+        struct {
+            Ast_Node* expr;
+            Ast_Node* body;
+        }_while;
     };
 };
 

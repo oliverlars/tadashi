@@ -455,31 +455,41 @@ compile_scope(Ast_Node* scope, Compiler* compiler){
 
 internal void
 compile_for(Ast_Node* root, Compiler* compiler){
-    int min = compile_expression(root->_for.min, RA, compiler);
-    int max = compile_expression(root->_for.max, RA, compiler);
-    sub_temporaries(compiler, max, min);
-    int count = max; //result of sub_temporaries is stored in min
-    int jump_location = compiler->at - compiler->start;
-    
+    compile_declaration(root->_for.decl, compiler);
+    auto start = compiler->at - compiler->start;
+    int cond = compile_expression(root->_for.cond, RA, compiler);
+    emit_add_absolute(compiler, RA, 0);
+    auto temp_compiler = *compiler;
+    compiler->at++;
     compile_scope(root->_for.body, compiler);
-    sub_temporary_absolute(compiler, count, 1);
-    emit_jump_not_zero(compiler, jump_location);
+    compile_declaration(root->_for.stmt, compiler);
+    emit_jump_unconditional(compiler, start);
+    auto end = compiler->at - compiler->start;
+    emit_jump_zero(&temp_compiler, end);
 }
 
 internal void
 compile_if(Ast_Node* root, Compiler* compiler){
     auto expr = compile_expression(root->_if.expr, RA, compiler);
     emit_add_absolute(compiler, RA, 0);
+    
     auto temp_compiler = *compiler; //we don't know where we will need to jump to yet
     compiler->at++;
+    
     compile_scope(root->_if.body, compiler);
-    auto temp_compiler2 = *compiler; //we don't know where we will need to jump to yet
-    compiler->at++;
-    auto _else = compiler->at - compiler->start;
-    emit_jump_zero(&temp_compiler, _else);
-    compile_scope(root->_if._else, compiler);
-    auto end = compiler->at - compiler->start;
-    emit_jump_unconditional(&temp_compiler2, end);
+    if(root->_if._else){
+        auto temp_compiler2 = *compiler; //we don't know where we will need to jump to yet
+        compiler->at++;
+        
+        auto _else = compiler->at - compiler->start;
+        emit_jump_zero(&temp_compiler, _else);
+        compile_scope(root->_if._else, compiler);
+        auto end = compiler->at - compiler->start;
+        emit_jump_unconditional(&temp_compiler2, end);
+    }else {
+        auto end = compiler->at - compiler->start;
+        emit_jump_zero(&temp_compiler, end);
+    }
 }
 
 

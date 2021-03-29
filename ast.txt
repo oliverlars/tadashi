@@ -4,5 +4,21 @@
 (function function_two
   (return (+ (+ 1 2 )3 )))
 (function entry
-  (decl a1 )
-  )
+  (decl array)
+  (decl array(call function_one ))
+  (decl array67 )
+  (decl array49 )
+  (decl array1 )
+  (decl array512 )
+  (decl array102 )
+  (decl array1256 )
+  (decl array991 )
+  (decl array2 )
+  (decl array(call function_two ))
+  (for (decl i0 )
+(< i 10 )(decl i(+ i 1 ))
+
+    (for (decl j(+ i 1 ))
+(< j 10 )(decl j(+ j 1 ))
+
+      )))

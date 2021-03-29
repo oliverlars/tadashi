@@ -49,7 +49,7 @@ get_token(Lexer* l){
                 get_token(l);
                 token.type = TOKEN_RIGHT_ANGLE_EQUAL;
             }else {
-                token.type = TOKEN_LEFT_ANGLE;
+                token.type = TOKEN_RIGHT_ANGLE;
             }
         }break;
         case '=':{

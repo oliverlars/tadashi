@@ -82,6 +82,13 @@ make_if_node(){
     return _if;
 }
 
+internal Ast_Node*
+make_while_node(){
+    auto _if = make_ast_node();
+    _if->type = AST_IF;
+    return _if;
+}
+
 internal int
 token_to_value(Token token){
     int result = 0;
@@ -252,17 +259,29 @@ parse_call(Parser* p){
 Ast_Node* parse_scope(Parser* p);
 
 internal Ast_Node*
+parse_stmt(Parser* p);
+
+internal Ast_Node*
 parse_for(Parser* p){
     get_token(&p->l);
-    auto min = parse_expr(p);
-    expect_keyword(&p->l, "to");
-    auto max = parse_expr(p);
+    auto name = get_token(&p->l);
+    auto decl = parse_decl(p);
+    decl->name = name;
+    
+    expect_token(&p->l, TOKEN_SEMICOLON);
+    auto cond = parse_expr(p);
+    expect_token(&p->l, TOKEN_SEMICOLON);
+    name = get_token(&p->l);
+    auto stmt = parse_decl(p);
+    stmt->name = name;
     expect_token(&p->l, TOKEN_LEFT_BRACE);
     auto body = parse_scope(p);
+    
     expect_token(&p->l, TOKEN_RIGHT_BRACE);
     auto _for = make_for_node();
-    _for->_for.min = min;
-    _for->_for.max = max;
+    _for->_for.decl = decl;
+    _for->_for.cond = cond;
+    _for->_for.stmt = stmt;
     _for->_for.body = body;
     return _for;
 }
@@ -288,6 +307,11 @@ parse_if(Parser* p){
     return _if;
 }
 
+internal Ast_Node*
+parse_while(Parser* p) {
+    auto _while = make_while_node();
+    return _while;
+}
 
 internal Ast_Node*
 parse_stmt(Parser* p){
@@ -301,6 +325,8 @@ parse_stmt(Parser* p){
     }
     else if(token_equals_string(peek, "if")){
         stmt = parse_if(p);
+    }else if(token_equals_string(peek, "while")){
+        stmt = parse_while(p);
     }else if(peek.type == TOKEN_IDENTIFIER){
         auto name = get_token(&p->l);
         if(peek_token(&p->l).type == TOKEN_LEFT_PAREN){
@@ -456,8 +482,9 @@ pretty_print(FILE* file, Ast_Node* root, int indent=0){
         case AST_FOR: {
             fprintf(file, "(");
             fprintf(file, "for ");
-            pretty_print(file, root->_for.min);
-            pretty_print(file, root->_for.max);
+            pretty_print(file, root->_for.decl);
+            pretty_print(file, root->_for.cond);
+            pretty_print(file, root->_for.stmt);
             fprintf(file, "\n");
             pretty_print(file, root->_for.body, indent+1);
             fprintf(file, ")");
