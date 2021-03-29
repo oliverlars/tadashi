@@ -29,6 +29,11 @@ enum Token_Type {
     TOKEN_EQUALS_EQUALS,
     TOKEN_BANG_EQUALS,
     
+    TOKEN_AMPERSAND,
+    TOKEN_AMPERSAND_AMPERSAND,
+    TOKEN_BAR,
+    TOKEN_BAR_BAR,
+    
     TOKEN_IDENTIFIER,
     TOKEN_NUMBER,
 };
@@ -56,6 +61,10 @@ char* token_types[] = {
     ">=",
     "==",
     "!=",
+    "&",
+    "&&",
+    "|",
+    "||",
     "IDENTIFIER",
     "NUMBER"
 };

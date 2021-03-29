@@ -8,7 +8,12 @@ fn function_two() {
 }
 
 fn entry() {
-	a = 1 < 1;
+	a = 0;
+	if 1 {
+		a = 1;
+	}else {
+		a = 2;
+	}
 }
 
 //add support for comments (like this one)

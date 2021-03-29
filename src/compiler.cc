@@ -88,6 +88,13 @@ emit_jump_not_zero(Compiler* compiler, int address){
 }
 
 internal void
+emit_jump_zero(Compiler* compiler, int address){
+    *compiler->at = OP_JUMP_ZERO << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += address;
+    compiler->at++;
+}
+
+internal void
 emit_jump_positive(Compiler* compiler, int address){
     *compiler->at = OP_JUMP_POSITIVE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += address;
@@ -119,6 +126,13 @@ internal void
 emit_jump_register(Compiler* compiler, Register r){
     *compiler->at = OP_JUMP_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)r << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    compiler->at++;
+}
+
+internal void
+emit_jump_unconditional(Compiler* compiler, int address){
+    *compiler->at = OP_JUMP_UNCONDITIONAL << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += address;
     compiler->at++;
 }
 
@@ -377,6 +391,10 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     emit_store_absolute(compiler, RA, result);
                 }break;
                 
+                case OP_LOGICAL_AND: {
+                    add_temporaries(compiler, result, b);
+                    emit_move_absolute(compiler, RA, 0);
+                }break;
             }
             
             return result;
@@ -401,6 +419,10 @@ internal void
 compile_for(Ast_Node* root, Compiler* compiler);
 
 internal void
+compile_if(Ast_Node* root, Compiler* compiler);
+
+
+internal void
 compile_scope(Ast_Node* scope, Compiler* compiler){
     auto member = scope->scope.members;
     while(member){
@@ -414,6 +436,9 @@ compile_scope(Ast_Node* scope, Compiler* compiler){
             }break;
             case AST_FOR: {
                 compile_for(member, compiler);
+            }break;
+            case AST_IF: {
+                compile_if(member, compiler);
             }break;
         }
         member = member->next;
@@ -430,6 +455,22 @@ compile_for(Ast_Node* root, Compiler* compiler){
     compile_scope(root->_for.body, compiler);
     sub_temporary_absolute(compiler, count, 1);
     emit_jump_not_zero(compiler, jump_location);
+}
+
+internal void
+compile_if(Ast_Node* root, Compiler* compiler){
+    auto expr = compile_expression(root->_if.expr, RA, compiler);
+    emit_add_absolute(compiler, RA, 0);
+    auto temp_compiler = *compiler; //we don't know where we will need to jump to yet
+    compiler->at++;
+    compile_scope(root->_if.body, compiler);
+    auto temp_compiler2 = *compiler; //we don't know where we will need to jump to yet
+    compiler->at++;
+    auto _else = compiler->at - compiler->start;
+    emit_jump_zero(&temp_compiler, _else);
+    compile_scope(root->_if._else, compiler);
+    auto end = compiler->at - compiler->start;
+    emit_jump_unconditional(&temp_compiler2, end);
 }
 
 

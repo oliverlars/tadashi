@@ -16,6 +16,7 @@ enum Ast_Type {
     AST_RETURN,
     AST_FOR,
     AST_INDEX,
+    AST_IF,
 };
 
 enum Op_Type {
@@ -29,6 +30,8 @@ enum Op_Type {
     OP_GTE,
     OP_NOT_EQ,
     OP_EQ,
+    OP_LOGICAL_AND,
+    OP_LOGICAL_OR,
 };
 
 enum Prim_Type {
@@ -83,6 +86,13 @@ struct Ast_Node {
         struct {
             Ast_Node* offset;
         }index;
+        struct {
+            Ast_Node* expr;
+            Ast_Node* body;
+            Ast_Node* else_if;
+            Ast_Node* _else;
+        }_if;
+        
     };
 };
 

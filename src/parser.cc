@@ -75,6 +75,13 @@ make_index_node(){
     return index;
 }
 
+internal Ast_Node*
+make_if_node(){
+    auto _if = make_ast_node();
+    _if->type = AST_IF;
+    return _if;
+}
+
 internal int
 token_to_value(Token token){
     int result = 0;
@@ -166,7 +173,9 @@ parse_binary_expr(Parser* p){
           (peek.type == TOKEN_LEFT_ANGLE) ||
           (peek.type == TOKEN_RIGHT_ANGLE) ||
           (peek.type == TOKEN_LEFT_ANGLE_EQUAL) ||
-          (peek.type == TOKEN_RIGHT_ANGLE_EQUAL)){
+          (peek.type == TOKEN_RIGHT_ANGLE_EQUAL) ||
+          (peek.type == TOKEN_AMPERSAND_AMPERSAND) ||
+          (peek.type == TOKEN_BAR_BAR)){
         auto bin = make_binary_node();
         if(peek.type == TOKEN_PLUS){
             bin->binary.op_type = OP_ADD;
@@ -180,6 +189,10 @@ parse_binary_expr(Parser* p){
             bin->binary.op_type = OP_LTE;
         }else if(peek.type == TOKEN_RIGHT_ANGLE_EQUAL){
             bin->binary.op_type = OP_GTE;
+        }else if(peek.type == TOKEN_AMPERSAND_AMPERSAND){
+            bin->binary.op_type = OP_LOGICAL_AND;
+        }else if(peek.type == TOKEN_BAR_BAR){
+            bin->binary.op_type = OP_LOGICAL_OR;
         }
         
         get_token(&p->l);
@@ -254,6 +267,27 @@ parse_for(Parser* p){
     return _for;
 }
 
+internal Ast_Node*
+parse_if(Parser* p){
+    auto _if = make_if_node();
+    get_token(&p->l);
+    auto expr = parse_expr(p);
+    expect_token(&p->l, TOKEN_LEFT_BRACE);
+    auto scope = parse_scope(p);
+    expect_token(&p->l, TOKEN_RIGHT_BRACE);
+    auto peek = peek_token(&p->l);
+    _if->_if.expr = expr;
+    _if->_if.body = scope;
+    if(token_equals_string(peek, "else")){
+        get_token(&p->l);
+        expect_token(&p->l, TOKEN_LEFT_BRACE);
+        auto else_scope = parse_scope(p);
+        _if->_if._else = else_scope;
+        expect_token(&p->l, TOKEN_RIGHT_BRACE);
+    }
+    return _if;
+}
+
 
 internal Ast_Node*
 parse_stmt(Parser* p){
@@ -264,6 +298,9 @@ parse_stmt(Parser* p){
         expect_token(&p->l, TOKEN_SEMICOLON); //semicolon
     }else if(token_equals_string(peek, "for")){
         stmt = parse_for(p);
+    }
+    else if(token_equals_string(peek, "if")){
+        stmt = parse_if(p);
     }else if(peek.type == TOKEN_IDENTIFIER){
         auto name = get_token(&p->l);
         if(peek_token(&p->l).type == TOKEN_LEFT_PAREN){
