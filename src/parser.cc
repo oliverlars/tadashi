@@ -413,10 +413,12 @@ parse_scope(Parser* p){
 internal Ast_Node*
 parse_global_scope(Parser* p){
     Ast_Node* scope = make_scope_node();
-    
-    scope->scope.members = parse_function(p);
-    scope->scope.members->next = parse_function(p);
-    scope->scope.members->next->next = parse_function(p);
+    auto funcs = &scope->scope.members;
+    while(token_equals_string(peek_token(&p->l), "fn")){
+        auto func = parse_function(p);
+        *funcs = func;
+        funcs = &(*funcs)->next;
+    }
     return scope;
 }
 

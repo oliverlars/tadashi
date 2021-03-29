@@ -4,23 +4,18 @@
 (function function_two
   (return (+ (+ 1 2 )3 )))
 (function entry
-  (decl array)
   (decl string)
-  (for (decl i0 )
-(< i 4 )(decl i(+ i 1 ))
-
-    (decl string(+ 5 ))
-)  (for (decl x0 )
+  (for (decl x0 )
 (< x 5 )(decl x(+ x 1 ))
 
-    (decl random(}ÜÛÊ÷ random (ŒÜÛÊ÷ random 13 )))
-    (decl random(²ÜÛÊ÷ random (Hå¾ random 17 )))
-    (decl random(çÜÛÊ÷ random (öÜÛÊ÷ random 5 )))
+    (decl random(ÉÝôÙD random (ØÝôÙD random 13 )))
+    (decl random(þÝôÙD random (H™¾ random 17 )))
+    (decl random(3ÞôÙD random (BÞôÙD random 5 )))
     (decl arrayrandom )
 )  (for (decl i0 )
-(< i 5 )(decl i(+ i 1 ))
+(< i 13 )(decl i(+ i 1 ))
 
     (for (decl j(+ i 1 ))
-(< j 5 )(decl j(+ j 1 ))
+(< j 13 )(decl j(+ j 1 ))
 
       )))
