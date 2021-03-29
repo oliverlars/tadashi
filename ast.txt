@@ -5,14 +5,17 @@
   (return (+ (+ 1 2 )3 )))
 (function entry
   (decl array)
-  (decl y1 )
-  (decl random4 )
-  (for (decl x0 )
+  (decl string)
+  (for (decl i0 )
+(< i 4 )(decl i(+ i 1 ))
+
+    (decl string(+ 5 ))
+)  (for (decl x0 )
 (< x 5 )(decl x(+ x 1 ))
 
-    (decl random(wÜä·¹ random (†Üä·¹ random 13 )))
-    (decl random(¬Üä·¹ random (Hí¿ random 17 )))
-    (decl random(áÜä·¹ random (ðÜä·¹ random 5 )))
+    (decl random(}ÜÛÊ÷ random (ŒÜÛÊ÷ random 13 )))
+    (decl random(²ÜÛÊ÷ random (Hå¾ random 17 )))
+    (decl random(çÜÛÊ÷ random (öÜÛÊ÷ random 5 )))
     (decl arrayrandom )
 )  (for (decl i0 )
 (< i 5 )(decl i(+ i 1 ))

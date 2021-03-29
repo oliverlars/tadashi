@@ -231,6 +231,21 @@ push_array(Compiler* compiler, Token name, int size){
     return array;
 }
 
+internal int
+push_string(Compiler* compiler, Token name, Token string){
+    int array = compiler->stack_ptr;
+    for(int i = 0; i < string.length; i++){
+        emit_move_absolute(compiler, RA, string.at[i]);
+        emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
+    }
+    compiler->variables[compiler->variable_count].name = name;
+    compiler->variables[compiler->variable_count].string = string;
+    compiler->variables[compiler->variable_count].address = array;
+    compiler->variables[compiler->variable_count].is_string = true;
+    compiler->variable_count++;
+    return array;
+}
+
 internal void
 push_local_address(Compiler* compiler, Token name, int address){
     emit_store_absolute(compiler, RA,  address);
@@ -365,6 +380,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
         }break;
         case AST_INDEX: {
             int variable = find_local(compiler, root->name);
+            assert(variable >= 0);
             auto offset = push_temporary(compiler, 0);
             auto offset_expr = compile_expression(root->index.offset, RA, compiler);
             copy_temporary(compiler, offset, offset_expr);
@@ -580,12 +596,17 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
             int init = compile_expression(expr, RA, compiler);
             copy_temporary(compiler, local, init);
         }else {
-            push_array(compiler, root->name, decl.array_length);
+            if(decl.string.length == 0){
+                push_array(compiler, root->name, decl.array_length);
+            }else{
+                push_string(compiler, root->name, decl.string);
+            }
         }
     }else {
         auto decl = root->decl;
         
         if(compiler->variables[variable].is_array){
+            
             auto offset = push_temporary(compiler, 0);
             auto offset_expr = compile_expression(decl.offset, RA, compiler);
             copy_temporary(compiler, offset, offset_expr);
@@ -594,6 +615,18 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
             emit_load_absolute(compiler, RA, offset);
             emit_load_absolute(compiler, RB, init);
             emit_store_register(compiler, RB, RA);
+            
+        }else if(compiler->variables[variable].is_string){
+            
+            auto offset = push_temporary(compiler, 0);
+            auto offset_expr = compile_expression(decl.offset, RA, compiler);
+            copy_temporary(compiler, offset, offset_expr);
+            add_temporary_absolute(compiler, offset, compiler->variables[variable].address);
+            auto init = compile_expression(decl.expr, RA, compiler);
+            emit_load_absolute(compiler, RA, offset);
+            emit_load_absolute(compiler, RB, init);
+            emit_store_register(compiler, RB, RA);
+            
         }else {
             auto expr = decl.expr;
             int init = compile_expression(expr, RA, compiler);

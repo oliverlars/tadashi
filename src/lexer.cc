@@ -28,7 +28,16 @@ get_token(Lexer* l){
         case 0:{
             token.type = TOKEN_EOF;
         }break;
-        
+        case '"':{
+            advance_lexer(l);
+            while(*l->at != '"'){
+                advance_lexer(l);
+            }
+            token.type = TOKEN_STRING;
+            token.at++;
+            token.length = l->at  - token.at;
+            advance_lexer(l);
+        }break;
         case '!': {
             if(peek_token(l).type == TOKEN_EQUALS)
             {

@@ -64,6 +64,7 @@ struct Ast_Node {
             Ast_Node* expr;
             int array_length;
             Ast_Node* offset;
+            Token string;
         } decl;
         struct {
             Ast_Node* members;

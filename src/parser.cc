@@ -249,6 +249,9 @@ parse_decl(Parser* p){
         get_token(&p->l);
         decl->decl.array_length = token_to_value(expect_token(&p->l, TOKEN_NUMBER));
         expect_token(&p->l, TOKEN_RIGHT_BRACKET);
+    }else if(peek_token(&p->l).type == TOKEN_STRING){
+        auto string = get_token(&p->l);
+        decl->decl.string = string;
     }else {
         decl->decl.expr = parse_expr(p);
     }

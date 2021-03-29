@@ -9,14 +9,17 @@ fn function_two() {
 
 fn entry() {
 	array = [5];
-	y = 1;
-	random = 4;
+	string = "test";
+	for i = 0; i < 4; i = i + 1 {
+		string[i] = string[i] + 5;
+	}
 	for x = 0; x < 5; x = x + 1 {
 		random = random ^ (random << 13);
 		random = random ^ (random >> 17);
 		random = random ^ (random << 5);
 		array[x] = random;
 	}
+	
 	for i = 0; i < 5; i = i +1 {
 		for j = i + 1; j < 5; j = j + 1 {
 			if array[i] > array[j] {
@@ -35,10 +38,10 @@ fn entry() {
 // while loops
 // add divides!!!!!
 // output debug info like where each block starts/ends (functions, ifs, fors, etc)
-// maybe change for loops to c like (for init; cond; stmt)
-// bug: for loops seem to run indefinitely when using variables
-// bug: make else statements optional
-
+// equals
+// parameters
+// and fix bugs
+// add strlen intrinsic
 /*
 
 */

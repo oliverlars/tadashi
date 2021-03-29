@@ -1,8 +1,10 @@
 
 struct Variable {
     Token name;
+    Token string;
     int address;
     bool is_array;
+    bool is_string;
     int array_length;
 };
 

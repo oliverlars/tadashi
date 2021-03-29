@@ -39,6 +39,9 @@ enum Token_Type {
     
     TOKEN_HAT,
     
+    TOKEN_QUOTE,
+    
+    TOKEN_STRING,
     TOKEN_IDENTIFIER,
     TOKEN_NUMBER,
 };
@@ -72,8 +75,9 @@ char* token_types[] = {
     "||",
     "<<",
     ">>"
-        "^"
-        "IDENTIFIER",
+        "^",
+    "STRING",
+    "IDENTIFIER",
     "NUMBER"
 };
 
