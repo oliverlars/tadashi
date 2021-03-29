@@ -181,6 +181,11 @@ push_local_address(Compiler* compiler, Token name, int address){
 }
 
 internal void
+pop_local(Compiler* compiler, int size = 1){
+    compiler->variable_count -= size;
+}
+
+internal void
 add_temporary_absolute(Compiler* compiler, int address, int value){
     emit_load_absolute(compiler, RA,  address);
     emit_add_absolute(compiler, RA, value);
@@ -327,7 +332,10 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
         
         case AST_IDENTIFIER: {
             int local = find_local(compiler, root->name);
-            assert(local >= 0);
+            if(local < 0){
+                printf("variable \"%.*s\" is not defined in this scope", root->name.length, root->name.at);
+                exit(0);
+            }
             return compiler->variables[local].address;
         }break;
     }
@@ -411,6 +419,8 @@ compile_function(Ast_Node* root, Compiler* compiler){
     auto function = &compiler->functions[compiler->function_count++];
     function->name = root->name;
     function->address = compiler->at - compiler->start;
+    int variables = compiler->variable_count;
     compile_scope(root->func.body, compiler);
     emit_return_function(compiler);
+    compiler->variable_count = variables;
 }

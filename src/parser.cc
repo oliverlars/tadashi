@@ -323,6 +323,7 @@ parse_global_scope(Parser* p){
     
     scope->scope.members = parse_function(p);
     scope->scope.members->next = parse_function(p);
+    scope->scope.members->next->next = parse_function(p);
     return scope;
 }
 

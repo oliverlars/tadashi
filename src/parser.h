@@ -42,7 +42,7 @@ struct Ast_Node {
     
     Ast_Node* next;
     Ast_Node* prev;
-    
+    int line_number;
     union {
         struct {
             Op_Type op_type;

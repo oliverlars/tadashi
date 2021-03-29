@@ -65,6 +65,7 @@ int main(){
     
     compile_function(scope->scope.members, &compiler);
     compile_function(scope->scope.members->next, &compiler);
+    compile_function(scope->scope.members->next->next, &compiler);
     
     
     
