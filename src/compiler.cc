@@ -95,6 +95,27 @@ emit_jump_positive(Compiler* compiler, int address){
 }
 
 internal void
+emit_jump_negative(Compiler* compiler, int address){
+    *compiler->at = OP_JUMP_NEGATIVE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += address;
+    compiler->at++;
+}
+
+internal void
+emit_jump_not_positive(Compiler* compiler, int address){
+    *compiler->at = OP_JUMP_NOT_POSITIVE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += address;
+    compiler->at++;
+}
+
+internal void
+emit_jump_not_negative(Compiler* compiler, int address){
+    *compiler->at = OP_JUMP_NOT_NEGATIVE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += address;
+    compiler->at++;
+}
+
+internal void
 emit_jump_register(Compiler* compiler, Register r){
     *compiler->at = OP_JUMP_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)r << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
@@ -323,13 +344,39 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     emit_jump_positive(compiler, jump - compiler->start);
                     printf("mul end: %d\n", compiler->at - compiler->start);
                 }break;
+                
                 case OP_LT:{
+                    sub_temporaries(compiler, result, b);
+                    emit_move_absolute(compiler, RA, 0);
+                    emit_jump_not_negative(compiler, compiler->at - compiler->start +2);
+                    emit_move_absolute(compiler, RA, 1);
+                    emit_store_absolute(compiler, RA, result);
+                }break;
+                
+                case OP_LTE:{
                     sub_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
                     emit_jump_positive(compiler, compiler->at - compiler->start +2);
                     emit_move_absolute(compiler, RA, 1);
                     emit_store_absolute(compiler, RA, result);
                 }break;
+                
+                case OP_GT:{
+                    sub_temporaries(compiler, result, b);
+                    emit_move_absolute(compiler, RA, 0);
+                    emit_jump_not_positive(compiler, compiler->at - compiler->start +2);
+                    emit_move_absolute(compiler, RA, 1);
+                    emit_store_absolute(compiler, RA, result);
+                }break;
+                
+                case OP_GTE:{
+                    sub_temporaries(compiler, result, b);
+                    emit_move_absolute(compiler, RA, 0);
+                    emit_jump_negative(compiler, compiler->at - compiler->start +2);
+                    emit_move_absolute(compiler, RA, 1);
+                    emit_store_absolute(compiler, RA, result);
+                }break;
+                
             }
             
             return result;

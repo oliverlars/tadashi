@@ -163,7 +163,10 @@ parse_binary_expr(Parser* p){
     auto peek = peek_token(&p->l);
     while((peek.type == TOKEN_PLUS) || 
           (peek.type == TOKEN_MINUS) ||
-          (peek.type == TOKEN_LEFT_ANGLE)){
+          (peek.type == TOKEN_LEFT_ANGLE) ||
+          (peek.type == TOKEN_RIGHT_ANGLE) ||
+          (peek.type == TOKEN_LEFT_ANGLE_EQUAL) ||
+          (peek.type == TOKEN_RIGHT_ANGLE_EQUAL)){
         auto bin = make_binary_node();
         if(peek.type == TOKEN_PLUS){
             bin->binary.op_type = OP_ADD;
@@ -171,6 +174,12 @@ parse_binary_expr(Parser* p){
             bin->binary.op_type = OP_SUB;
         }else if(peek.type == TOKEN_LEFT_ANGLE){
             bin->binary.op_type = OP_LT;
+        }else if(peek.type == TOKEN_RIGHT_ANGLE){
+            bin->binary.op_type = OP_GT;
+        }else if(peek.type == TOKEN_LEFT_ANGLE_EQUAL){
+            bin->binary.op_type = OP_LTE;
+        }else if(peek.type == TOKEN_RIGHT_ANGLE_EQUAL){
+            bin->binary.op_type = OP_GTE;
         }
         
         get_token(&p->l);

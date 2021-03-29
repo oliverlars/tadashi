@@ -30,6 +30,7 @@ get_token(Lexer* l){
         }break;
         case '!': {
             if(peek_token(l).type == TOKEN_EQUALS){
+                get_token(l);
                 token.type = TOKEN_BANG_EQUALS;
             }else {
                 token.type = TOKEN_BANG;
@@ -37,6 +38,7 @@ get_token(Lexer* l){
         }break;
         case '<': {
             if(peek_token(l).type == TOKEN_EQUALS){
+                get_token(l);
                 token.type = TOKEN_LEFT_ANGLE_EQUAL;
             }else {
                 token.type = TOKEN_LEFT_ANGLE;
@@ -44,6 +46,7 @@ get_token(Lexer* l){
         }break;
         case '>': {
             if(peek_token(l).type == TOKEN_EQUALS){
+                get_token(l);
                 token.type = TOKEN_RIGHT_ANGLE_EQUAL;
             }else {
                 token.type = TOKEN_LEFT_ANGLE;

@@ -105,7 +105,8 @@ int main(){
                 int operand = get_operand(instr);
                 vm.registers[r] = vm.registers[r] + operand;
                 vm.zero = vm.registers[r] == 0;
-                vm.positive = vm.registers[r] >= 0;
+                vm.positive = vm.registers[r] > 0;
+                vm.negative = vm.registers[r] < 0;
             }break;
             
             case OP_SUB_ABSOLUTE:{
@@ -113,7 +114,8 @@ int main(){
                 int operand = get_operand(instr);
                 vm.registers[r] = vm.registers[r] - operand;
                 vm.zero = vm.registers[r] == 0;
-                vm.positive = vm.registers[r] >= 0;
+                vm.positive = vm.registers[r] > 0;
+                vm.negative = vm.registers[r] < 0;
             }break;
             
             case OP_LOAD_ABSOLUTE:{
@@ -157,6 +159,8 @@ int main(){
                 int y = get_register_y(instr);
                 vm.registers[x] = vm.registers[x] + vm.registers[y];
                 vm.zero = vm.registers[x] == 0;
+                vm.positive = vm.registers[x] > 0;
+                vm.negative = vm.registers[x] < 0;
             }break;
             
             case OP_SUB_REGISTER:{
@@ -164,7 +168,8 @@ int main(){
                 int y = get_register_y(instr);
                 vm.registers[x] = vm.registers[x] - vm.registers[y];
                 vm.zero = vm.registers[x] == 0;
-                vm.positive = vm.registers[x] >= 0;
+                vm.positive = vm.registers[x] > 0;
+                vm.negative = vm.registers[x] < 0;
             }break;
             
             case OP_LOAD_REGISTER:{

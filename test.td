@@ -8,7 +8,7 @@ fn function_two() {
 }
 
 fn entry() {
-	a = 1 < 2;
+	a = 1 < 1;
 }
 
 //add support for comments (like this one)
