@@ -1,19 +1,27 @@
-fn dot(a, b) {
-	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+fn dot(a, b){
+	result = 0;
+	for i = 0; i < 3; i = i + 1 {
+		result = result + a[i]*b[i];
+	}
+	
+	return result;
 }
 
 fn entry() {
 	x = [3];
-	y = [3];
-	x[0] = 0;
-	x[1] = 0;
-	x[2] = 0;
+	x[0] = 1;
+	x[1] = 2;
+	x[2] = 3;
 	
-	y[0] = 0;
-	y[1] = 0;
-	y[2] = 0;
-	z = 1*1;
+	y = [3];
+	y[0] = 1;
+	y[1] = 2;
+	y[2] = 3;
+	product_result = dot(x, y);
 }
+
+
+
 
 
 

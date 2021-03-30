@@ -18,6 +18,9 @@ struct Compiler {
     instruction* at;
     instruction* start;
     
+    bool has_comment;
+    char* comment;
+    
     Variable variables[256]; //arbitrary limit
     int variable_count;
     
@@ -25,6 +28,8 @@ struct Compiler {
     int function_count;
     
     int stack_ptr = 512;
+    
+    Arena comment_arena;
 };
 
 

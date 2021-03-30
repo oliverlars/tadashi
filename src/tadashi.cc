@@ -46,8 +46,6 @@ load/stores on everything
 */
 
 
-void dissassemble(instruction* start, instruction* end);
-
 int main(){
     Lexer lexer = {};
     lexer.at = open_source("test.td");
@@ -62,6 +60,7 @@ int main(){
     // TODO(Oliver): use arena
     compiler.at = (instruction*)malloc(sizeof(instruction)*MEMORY_SIZE);
     compiler.start = compiler.at;
+    compiler.comment_arena = make_arena(8192);
     
     auto member = scope->scope.members;
     while(member){
@@ -85,7 +84,6 @@ int main(){
     vm.memory = compiler.start;
     vm.pc = start;
     
-    dissassemble(compiler.start, compiler.at);
     while(vm.pc < (compiler.at - compiler.start)){
         
         instruction instr = vm.memory[vm.pc];
@@ -122,8 +120,8 @@ int main(){
             
             case OP_LOAD_ABSOLUTE:{
                 int r = get_register_x(instr);
-                int operand = get_address(instr);
-                vm.registers[r] = vm.memory[operand];
+                int address = get_address(instr);
+                vm.registers[r] = vm.memory[address];
             }break;
             
             case OP_STORE_ABSOLUTE:{
@@ -330,7 +328,7 @@ int main(){
         }
     }
     
-    printf("RA: %d\n", vm.RA);
+    printf("\nRA: %d\n", vm.RA);
     printf("RB: %d\n", vm.RB);
     printf("RC: %d\n", vm.RC);
     printf("RD: %d\n", vm.RD);
@@ -339,7 +337,8 @@ int main(){
     for(int i = 0; i < compiler.variable_count; i++){
         auto v = compiler.variables[i];
         if(v.is_array){
-            for(int j = 0; j < v.array_length; j++){
+            printf("$%d | %.*s: %d\n", v.address, v.name.length, v.name.at, vm.memory[v.address]);
+            for(int j = 1; j <= v.array_length; j++){
                 printf("$%d | %.*s[%d]: %d\n", v.address +j, v.name.length, v.name.at, j, vm.memory[v.address+j]);
             }
         }else if(v.is_string){
@@ -354,203 +353,4 @@ int main(){
         }
     }
     return 0;
-}
-
-internal void
-dissassemble(instruction* start, instruction* end) {
-    
-    char* reg[4] = {"RA", "RB", "RC", "RD"};
-    int address = 0;
-    while(start != end){
-        auto instr = *start;
-        int opcode = get_opcode(instr);
-        printf("%d: ", address++);
-        switch(opcode){
-            
-            case OP_MOVE_ABSOLUTE:{
-                int r = get_register_x(instr);
-                int operand = get_operand(instr);
-                printf("move %s, %d", reg[r], operand);
-            }break;
-            
-            case OP_ADD_ABSOLUTE:{
-                int r = get_register_x(instr);
-                int operand = get_operand(instr);
-                printf("add %s, %d", reg[r], operand);
-            }break;
-            
-            case OP_SUB_ABSOLUTE:{
-                int r = get_register_x(instr);
-                int operand = get_operand(instr);
-                printf("sub %s, %d", reg[r], operand);
-            }break;
-            
-            case OP_LOAD_ABSOLUTE:{
-                int r = get_register_x(instr);
-                int address = get_operand(instr);
-                printf("load %s, $%d", reg[r], address);
-            }break;
-            
-            case OP_STORE_ABSOLUTE:{
-                int r = get_register_x(instr);
-                int address = get_operand(instr);
-                printf("store %s, $%d", reg[r], address);
-            }break;
-            
-            case OP_AND_ABSOLUTE:{
-                int r = get_register_x(instr);
-                int operand = get_operand(instr);
-                printf("and %s, %d", reg[r], operand);
-            }break;
-            
-            case OP_OR_ABSOLUTE:{
-                int r = get_register_x(instr);
-                int operand = get_operand(instr);
-                printf("or %s, %d", reg[r], operand);
-            }break;
-            
-            case OP_XOR_ABSOLUTE:{
-                int r = get_register_x(instr);
-                int operand = get_operand(instr);
-                printf("xor %s, %d", reg[r], operand);
-            }break;
-            
-            case OP_MOVE_REGISTER:{
-                int x = get_register_x(instr);
-                int y = get_operand(instr);
-                printf("move %s, %s", reg[x], reg[y]);
-            }break;
-            
-            case OP_ADD_REGISTER:{
-                int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                printf("add %s, %s", reg[x], reg[y]);
-            }break;
-            
-            case OP_SUB_REGISTER:{
-                int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                printf("sub %s, %s", reg[x], reg[y]);
-            }break;
-            
-            case OP_LOAD_REGISTER:{
-                int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                printf("load %s, %s", reg[x], reg[y]);
-            }break;
-            
-            case OP_STORE_REGISTER:{
-                int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                printf("store %s, %s", reg[x], reg[y]);
-            }break;
-            
-            case OP_AND_REGISTER:{
-                int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                printf("and %s, %s", reg[x], reg[y]);
-            }break;
-            
-            case OP_OR_REGISTER:{
-                int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                printf("or %s, %s", reg[x], reg[y]);
-            }break;
-            
-            case OP_XOR_REGISTER:{
-                int x = get_register_x(instr);
-                int y = get_register_y(instr);
-                printf("xor %s, %s", reg[x], reg[y]);
-            }break;
-            
-            case OP_SR0_REGISTER:{
-                int x = get_register_x(instr);
-                printf("sr %s, %s", reg[x]);
-            }break;
-            
-            case OP_SL0_REGISTER:{
-                int x = get_register_x(instr);
-                printf("sl %s, 1", reg[x]);
-            }break;
-            
-            case OP_ROR_REGISTER:{
-                
-            }break;
-            
-            case OP_ROL_REGISTER:{
-            }break;
-            
-            case OP_JUMP_UNCONDITIONAL:{
-                int address = get_address(instr);
-                printf("jumpu %d", address);
-            }break;
-            
-            case OP_JUMP_ZERO:{
-                int address = get_address(instr);
-                printf("jumpz %d", address);
-            }break;
-            
-            case OP_JUMP_NOT_ZERO:{
-                int address = get_address(instr);
-                printf("jumpnz %d", address);
-            }break;
-            
-            case OP_JUMP_CARRY:{
-                int address = get_address(instr);
-                printf("jumpc %d", address);
-            }break;
-            
-            case OP_JUMP_NO_CARRY:{
-                int address = get_address(instr);
-                printf("jumpnc %d", address);
-            }break;
-            
-            case OP_JUMP_NEGATIVE:{
-                int address = get_address(instr);
-                printf("jumpn %d", address);
-            }break;
-            
-            case OP_JUMP_NOT_NEGATIVE:{
-                int address = get_address(instr);
-                printf("jumpnn %d", address);
-            }break;
-            
-            case OP_JUMP_POSITIVE:{
-                int address = get_address(instr);
-                printf("jumpp %d", address);
-            }break;
-            
-            case OP_JUMP_NOT_POSITIVE:{
-                int address = get_address(instr);
-                printf("jumpnp %d", address);
-            }break;
-            
-            case OP_JUMP_OVERFLOW:{
-                int address = get_address(instr);
-                printf("jumpo %d", address);
-            }break;
-            
-            case OP_JUMP_NO_OVERFLOW:{
-                int address = get_address(instr);
-                printf("jumpno %d", address);
-            }break;
-            
-            case OP_JUMP_REGISTER:{
-                int y = get_register_y(instr);
-                printf("jumpr %s", reg[y]);
-            }break;
-            
-            case OP_CALL:{
-                int address = get_call_address(instr);
-                printf("call %d", address);
-            }break;
-            
-            case OP_RETURN:{
-                printf("ret");
-            }break;
-        }
-        printf("\n");
-        start++;
-    }
-    printf("\n");
 }

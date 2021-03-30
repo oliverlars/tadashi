@@ -63,6 +63,7 @@ struct Ast_Node {
         struct {
             Ast_Node* expr;
             int array_length;
+            bool is_array;
             Ast_Node* offset;
             Token string;
         } decl;

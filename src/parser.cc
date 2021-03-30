@@ -262,6 +262,7 @@ parse_decl(Parser* p){
     if(peek_token(&p->l).type == TOKEN_LEFT_BRACKET){
         get_token(&p->l);
         decl->decl.array_length = token_to_value(expect_token(&p->l, TOKEN_NUMBER));
+        decl->decl.is_array = true;
         expect_token(&p->l, TOKEN_RIGHT_BRACKET);
     }else if(peek_token(&p->l).type == TOKEN_STRING){
         auto string = get_token(&p->l);
@@ -387,8 +388,14 @@ parse_function(Parser* p){
     auto params = &func->func.parameters;
     while(!tokens_equal(peek_token(&p->l), right_paren)){
         //auto param = parse_decl(p);
-        auto param = make_identifier_node();
+        auto param = make_declaration_node();
         param->name = get_token(&p->l);
+        
+        if(peek_token(&p->l).type == TOKEN_LEFT_BRACKET){
+            get_token(&p->l);
+            expect_token(&p->l, TOKEN_RIGHT_BRACKET);
+        }
+        
         *params = param;
         params = &(*params)->next;
         

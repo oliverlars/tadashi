@@ -1,10 +1,230 @@
 
 
 internal void
+dissassemble(Compiler* compiler) {
+    
+    char* reg[4] = {"RA", "RB", "RC", "RD"};
+    auto instr = *compiler->at;
+    int opcode = get_opcode(instr);
+    printf("%d: ", compiler->at - compiler->start);
+    switch(opcode){
+        
+        case OP_MOVE_ABSOLUTE:{
+            int r = get_register_x(instr);
+            int operand = get_operand(instr);
+            printf("move %s, %d", reg[r], operand);
+        }break;
+        
+        case OP_ADD_ABSOLUTE:{
+            int r = get_register_x(instr);
+            int operand = get_operand(instr);
+            printf("add %s, %d", reg[r], operand);
+        }break;
+        
+        case OP_SUB_ABSOLUTE:{
+            int r = get_register_x(instr);
+            int operand = get_operand(instr);
+            printf("sub %s, %d", reg[r], operand);
+        }break;
+        
+        case OP_LOAD_ABSOLUTE:{
+            int r = get_register_x(instr);
+            int address = get_operand(instr);
+            printf("load %s, $%d", reg[r], address);
+        }break;
+        
+        case OP_STORE_ABSOLUTE:{
+            int r = get_register_x(instr);
+            int address = get_operand(instr);
+            printf("store %s, $%d", reg[r], address);
+        }break;
+        
+        case OP_AND_ABSOLUTE:{
+            int r = get_register_x(instr);
+            int operand = get_operand(instr);
+            printf("and %s, %d", reg[r], operand);
+        }break;
+        
+        case OP_OR_ABSOLUTE:{
+            int r = get_register_x(instr);
+            int operand = get_operand(instr);
+            printf("or %s, %d", reg[r], operand);
+        }break;
+        
+        case OP_XOR_ABSOLUTE:{
+            int r = get_register_x(instr);
+            int operand = get_operand(instr);
+            printf("xor %s, %d", reg[r], operand);
+        }break;
+        
+        case OP_MOVE_REGISTER:{
+            int x = get_register_x(instr);
+            int y = get_operand(instr);
+            printf("move %s, %s", reg[x], reg[y]);
+        }break;
+        
+        case OP_ADD_REGISTER:{
+            int x = get_register_x(instr);
+            int y = get_register_y(instr);
+            printf("add %s, %s", reg[x], reg[y]);
+        }break;
+        
+        case OP_SUB_REGISTER:{
+            int x = get_register_x(instr);
+            int y = get_register_y(instr);
+            printf("sub %s, %s", reg[x], reg[y]);
+        }break;
+        
+        case OP_LOAD_REGISTER:{
+            int x = get_register_x(instr);
+            int y = get_register_y(instr);
+            printf("load %s, %s", reg[x], reg[y]);
+        }break;
+        
+        case OP_STORE_REGISTER:{
+            int x = get_register_x(instr);
+            int y = get_register_y(instr);
+            printf("store %s, %s", reg[x], reg[y]);
+        }break;
+        
+        case OP_AND_REGISTER:{
+            int x = get_register_x(instr);
+            int y = get_register_y(instr);
+            printf("and %s, %s", reg[x], reg[y]);
+        }break;
+        
+        case OP_OR_REGISTER:{
+            int x = get_register_x(instr);
+            int y = get_register_y(instr);
+            printf("or %s, %s", reg[x], reg[y]);
+        }break;
+        
+        case OP_XOR_REGISTER:{
+            int x = get_register_x(instr);
+            int y = get_register_y(instr);
+            printf("xor %s, %s", reg[x], reg[y]);
+        }break;
+        
+        case OP_SR0_REGISTER:{
+            int x = get_register_x(instr);
+            printf("sr %s, %s", reg[x]);
+        }break;
+        
+        case OP_SL0_REGISTER:{
+            int x = get_register_x(instr);
+            printf("sl %s, 1", reg[x]);
+        }break;
+        
+        case OP_ROR_REGISTER:{
+            
+        }break;
+        
+        case OP_ROL_REGISTER:{
+        }break;
+        
+        case OP_JUMP_UNCONDITIONAL:{
+            int address = get_address(instr);
+            printf("jumpu %d", address);
+        }break;
+        
+        case OP_JUMP_ZERO:{
+            int address = get_address(instr);
+            printf("jumpz %d", address);
+        }break;
+        
+        case OP_JUMP_NOT_ZERO:{
+            int address = get_address(instr);
+            printf("jumpnz %d", address);
+        }break;
+        
+        case OP_JUMP_CARRY:{
+            int address = get_address(instr);
+            printf("jumpc %d", address);
+        }break;
+        
+        case OP_JUMP_NO_CARRY:{
+            int address = get_address(instr);
+            printf("jumpnc %d", address);
+        }break;
+        
+        case OP_JUMP_NEGATIVE:{
+            int address = get_address(instr);
+            printf("jumpn %d", address);
+        }break;
+        
+        case OP_JUMP_NOT_NEGATIVE:{
+            int address = get_address(instr);
+            printf("jumpnn %d", address);
+        }break;
+        
+        case OP_JUMP_POSITIVE:{
+            int address = get_address(instr);
+            printf("jumpp %d", address);
+        }break;
+        
+        case OP_JUMP_NOT_POSITIVE:{
+            int address = get_address(instr);
+            printf("jumpnp %d", address);
+        }break;
+        
+        case OP_JUMP_OVERFLOW:{
+            int address = get_address(instr);
+            printf("jumpo %d", address);
+        }break;
+        
+        case OP_JUMP_NO_OVERFLOW:{
+            int address = get_address(instr);
+            printf("jumpno %d", address);
+        }break;
+        
+        case OP_JUMP_REGISTER:{
+            int y = get_register_y(instr);
+            printf("jumpr %s", reg[y]);
+        }break;
+        
+        case OP_CALL:{
+            int address = get_call_address(instr);
+            printf("call %d", address);
+        }break;
+        
+        case OP_RETURN:{
+            printf("ret");
+        }break;
+    }
+    if(compiler->has_comment){
+        printf(" ; %s\n", compiler->comment);
+        compiler->has_comment = false;
+    }else {
+        printf("\n");
+    }
+}
+
+internal void
+set_comment(Compiler* compiler, char* comment){
+    compiler->has_comment = true;
+    compiler->comment = comment;
+}
+
+internal void
+set_commentf(Compiler* compiler, char* fmt, ...){
+    
+    char* buffer = push_size(&compiler->comment_arena, 256, char);
+    va_list args;
+    va_start (args, fmt);
+    int length = vsnprintf (buffer,256,fmt, args);
+    buffer[length] = 0;
+    va_end (args);
+    
+    compiler->has_comment = true;
+    compiler->comment = buffer;
+}
+
+internal void
 emit_move_absolute(Compiler* compiler, Register r, int value){
     *compiler->at = OP_MOVE_ABSOLUTE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)r << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += value;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -13,6 +233,7 @@ emit_store_absolute(Compiler* compiler, Register r, int address){
     *compiler->at = OP_STORE_ABSOLUTE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)r << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += address;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -21,6 +242,7 @@ emit_load_absolute(Compiler* compiler, Register r, int address){
     *compiler->at = OP_LOAD_ABSOLUTE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)r << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += address;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -29,6 +251,7 @@ emit_add_absolute(Compiler* compiler, Register r, int value){
     *compiler->at = OP_ADD_ABSOLUTE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)r << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += value;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -37,6 +260,7 @@ emit_sub_absolute(Compiler* compiler, Register r, int value){
     *compiler->at = OP_SUB_ABSOLUTE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)r << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += value;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -45,6 +269,7 @@ emit_move_register(Compiler* compiler, Register x, Register y){
     *compiler->at = OP_MOVE_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += (int)y << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -53,6 +278,7 @@ emit_store_register(Compiler* compiler, Register x, Register y){
     *compiler->at = OP_STORE_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += (int)y << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -61,6 +287,7 @@ emit_load_register(Compiler* compiler, Register x, Register y){
     *compiler->at = OP_LOAD_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += (int)y << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -69,6 +296,7 @@ emit_add_register(Compiler* compiler, Register x, Register y){
     *compiler->at = OP_ADD_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += (int)y << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -76,6 +304,7 @@ internal void
 emit_sl_register(Compiler* compiler, Register x){
     *compiler->at = OP_SL0_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -83,6 +312,7 @@ internal void
 emit_sr_register(Compiler* compiler, Register x){
     *compiler->at = OP_SL0_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -91,6 +321,7 @@ emit_sub_register(Compiler* compiler, Register x, Register y){
     *compiler->at = OP_SUB_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += (int)y << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -99,6 +330,7 @@ emit_xor_register(Compiler* compiler, Register x, Register y){
     *compiler->at = OP_XOR_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     *compiler->at += (int)y << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -106,6 +338,7 @@ internal void
 emit_jump_not_zero(Compiler* compiler, int address){
     *compiler->at = OP_JUMP_NOT_ZERO << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += address;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -113,6 +346,7 @@ internal void
 emit_jump_zero(Compiler* compiler, int address){
     *compiler->at = OP_JUMP_ZERO << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += address;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -120,6 +354,7 @@ internal void
 emit_jump_positive(Compiler* compiler, int address){
     *compiler->at = OP_JUMP_POSITIVE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += address;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -127,6 +362,7 @@ internal void
 emit_jump_negative(Compiler* compiler, int address){
     *compiler->at = OP_JUMP_NEGATIVE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += address;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -134,6 +370,7 @@ internal void
 emit_jump_not_positive(Compiler* compiler, int address){
     *compiler->at = OP_JUMP_NOT_POSITIVE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += address;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -141,6 +378,7 @@ internal void
 emit_jump_not_negative(Compiler* compiler, int address){
     *compiler->at = OP_JUMP_NOT_NEGATIVE << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += address;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -148,6 +386,7 @@ internal void
 emit_jump_register(Compiler* compiler, Register r){
     *compiler->at = OP_JUMP_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)r << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -155,6 +394,7 @@ internal void
 emit_jump_unconditional(Compiler* compiler, int address){
     *compiler->at = OP_JUMP_UNCONDITIONAL << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += address;
+    dissassemble(compiler);
     compiler->at++;
 }
 
@@ -175,7 +415,8 @@ internal int
 find_local(Compiler* compiler, Token name){
     int result = 0;
     for(; result < 256; result++){
-        if(tokens_equal(name, compiler->variables[result].name)){
+        auto v = compiler->variables[result];
+        if(tokens_equal(name, v.name)){
             return result;
         }
     }
@@ -218,14 +459,16 @@ push_local(Compiler* compiler, Token name, int value){
 
 internal int
 push_array(Compiler* compiler, Token name, int size){
+    auto ptr = compiler->stack_ptr;
+    set_commentf(compiler, "array set: %.*s", name.length, name.at);
     emit_move_absolute(compiler, RA, compiler->stack_ptr+1);
-    emit_store_absolute(compiler, RA,  compiler->stack_ptr);
+    emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
     compiler->variables[compiler->variable_count].name = name;
-    compiler->variables[compiler->variable_count].address = compiler->stack_ptr;
-    compiler->variables[compiler->variable_count].array_length = size;
+    compiler->variables[compiler->variable_count].address = ptr;
     compiler->variables[compiler->variable_count].is_array = true;
+    compiler->variables[compiler->variable_count].array_length = size;
     compiler->variable_count++;
-    auto ptr = compiler->stack_ptr++;
+    
     for(int i = 0; i < size; i++){
         emit_move_absolute(compiler, RA, 0);
         emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
@@ -397,12 +640,17 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             
         }break;
         case AST_INDEX: {
+            set_commentf(compiler, "index start: %.*s", root->name.length, root->name.at);
             int variable = find_local(compiler, root->name);
             assert(variable >= 0);
             auto offset = push_temporary(compiler, 0);
             auto offset_expr = compile_expression(root->index.offset, RA, compiler);
             copy_temporary(compiler, offset, offset_expr);
             add_temporaries(compiler, offset, compiler->variables[variable].address);
+            emit_load_absolute(compiler, RB, offset);
+            emit_add_absolute(compiler, RB, 0);
+            emit_load_register(compiler, RA, RB);
+            set_commentf(compiler, "index end: %.*s", root->name.length, root->name.at);
             return push_temporary_from_register(compiler, RA);
         }break;
         case AST_VALUE: {
@@ -511,11 +759,16 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
         
         case AST_IDENTIFIER: {
             int local = find_local(compiler, root->name);
+            set_commentf(compiler, "ref identifier: %.*s", root->name.length, root->name.at);
             if(local < 0){
                 printf("variable \"%.*s\" is not defined in this scope", root->name.length, root->name.at);
                 exit(0);
             }
-            return compiler->variables[local].address;
+            if(compiler->variables[local].is_array){
+                return compiler->variables[local].address;
+            }else {
+                return compiler->variables[local].address;
+            }
         }break;
     }
     return -1;
@@ -613,7 +866,7 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
             int init = compile_expression(expr, RA, compiler);
             copy_temporary(compiler, local, init);
         }else {
-            if(decl.string.length == 0){
+            if(decl.is_array){
                 push_array(compiler, root->name, decl.array_length);
             }else{
                 push_string(compiler, root->name, decl.string);
@@ -622,7 +875,7 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
     }else {
         auto decl = root->decl;
         
-        if(compiler->variables[variable].is_array){
+        if(compiler->variables[variable].is_array || compiler->variables[variable].is_string){
             
             auto offset = push_temporary(compiler, 0);
             auto offset_expr = compile_expression(decl.offset, RA, compiler);
@@ -630,17 +883,7 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
             add_temporary_absolute(compiler, offset, compiler->variables[variable].address);
             auto init = compile_expression(decl.expr, RA, compiler);
             emit_load_absolute(compiler, RA, offset);
-            emit_load_absolute(compiler, RB, init);
-            emit_store_register(compiler, RB, RA);
-            
-        }else if(compiler->variables[variable].is_string){
-            
-            auto offset = push_temporary(compiler, 0);
-            auto offset_expr = compile_expression(decl.offset, RA, compiler);
-            copy_temporary(compiler, offset, offset_expr);
-            add_temporary_absolute(compiler, offset, compiler->variables[variable].address);
-            auto init = compile_expression(decl.expr, RA, compiler);
-            emit_load_absolute(compiler, RA, offset);
+            emit_add_absolute(compiler, RA, 1);
             emit_load_absolute(compiler, RB, init);
             emit_store_register(compiler, RB, RA);
             
@@ -654,6 +897,9 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
 
 internal void
 compile_function(Ast_Node* root, Compiler* compiler){
+    
+    set_commentf(compiler, "function start: %.*s", root->name.length, root->name.at);
+    
     auto function = &compiler->functions[compiler->function_count++];
     function->name = root->name;
     function->address = compiler->at - compiler->start;
@@ -674,5 +920,9 @@ compile_function(Ast_Node* root, Compiler* compiler){
     }else {
         compile_scope(root->func.body, compiler);
     }
-    emit_return_function(compiler);
+    set_commentf(compiler, "function return: %.*s", root->name.length, root->name.at);
+    emit_sub_absolute(compiler, RC, 1);
+    emit_load_register(compiler, RD, RC);
+    emit_jump_register(compiler, RD);
+    
 }

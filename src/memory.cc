@@ -10,6 +10,7 @@ make_arena(u64 number_of_bytes){
 
 #define push_type(arena, type) (type*)_push_size(arena, sizeof(type))
 #define push_type_zero(arena, type) (type*)_push_size_zero(arena, sizeof(type))
+#define push_size(arena, bytes, type) (type*)_push_size(arena, sizeof(type)*bytes)
 
 internal void*
 _push_size(Arena* arena, u64 size){
