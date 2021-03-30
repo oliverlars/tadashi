@@ -218,17 +218,20 @@ push_local(Compiler* compiler, Token name, int value){
 
 internal int
 push_array(Compiler* compiler, Token name, int size){
-    int array = compiler->stack_ptr;
+    emit_move_absolute(compiler, RA, compiler->stack_ptr+1);
+    emit_store_absolute(compiler, RA,  compiler->stack_ptr);
+    compiler->variables[compiler->variable_count].name = name;
+    compiler->variables[compiler->variable_count].address = compiler->stack_ptr;
+    compiler->variables[compiler->variable_count].array_length = size;
+    compiler->variables[compiler->variable_count].is_array = true;
+    compiler->variable_count++;
+    auto ptr = compiler->stack_ptr++;
     for(int i = 0; i < size; i++){
         emit_move_absolute(compiler, RA, 0);
         emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
     }
-    compiler->variables[compiler->variable_count].name = name;
-    compiler->variables[compiler->variable_count].address = array;
-    compiler->variables[compiler->variable_count].is_array = true;
-    compiler->variables[compiler->variable_count].array_length = size;
-    compiler->variable_count++;
-    return array;
+    
+    return ptr;
 }
 
 internal int
@@ -351,9 +354,11 @@ emit_jump_function(Compiler* compiler, char* function){
 
 internal void
 emit_jump_function(Compiler* compiler, Token function){
+    
     int function_index = find_function(compiler, function);
     assert(function_index >= 0);
     auto f = compiler->functions[function_index];
+    
     emit_move_absolute(compiler, RD, compiler->at - compiler->start + 5);
     emit_store_register(compiler, RD, RC);
     emit_add_absolute(compiler, RC, 1);
@@ -374,6 +379,19 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
     assert(root);
     switch(root->type){
         case AST_FUNCTION_CALL: {
+            
+            int function_index = find_function(compiler, root->name);
+            assert(function_index >= 0);
+            auto f = compiler->functions[function_index];
+            
+            auto arg = root->call.arguments;
+            int stack_ptr = f.stack_ptr;
+            while(arg){
+                emit_load_absolute(compiler, RA, compile_expression(arg, RA, compiler));
+                emit_store_absolute(compiler, RA, stack_ptr++);
+                arg = arg->next;
+            }
+            
             emit_jump_function(compiler, root->name);
             return push_temporary_from_register(compiler, RA);
             
@@ -384,9 +402,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             auto offset = push_temporary(compiler, 0);
             auto offset_expr = compile_expression(root->index.offset, RA, compiler);
             copy_temporary(compiler, offset, offset_expr);
-            add_temporary_absolute(compiler, offset, compiler->variables[variable].address);
-            emit_load_absolute(compiler, RB, offset);
-            emit_load_register(compiler, RA, RA);
+            add_temporaries(compiler, offset, compiler->variables[variable].address);
             return push_temporary_from_register(compiler, RA);
         }break;
         case AST_VALUE: {
@@ -407,17 +423,18 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     sub_temporaries(compiler, result, b);
                 }break;
                 case OP_MUL:{
-                    
                     int count = duplicate_temporary(compiler, b);
+                    emit_load_absolute(compiler, RB, b);
+                    auto jump = compiler->at - compiler->start;
                     sub_temporary_absolute(compiler, count, 1);
-                    auto jump = compiler->at;
+                    auto temp_compiler = *compiler;
+                    compiler->at++;
                     
                     add_temporaries(compiler, result, a);
                     
-                    sub_temporary_absolute(compiler, count, 1);
-                    
-                    emit_jump_positive(compiler, jump - compiler->start);
-                    
+                    emit_jump_unconditional(compiler, jump);
+                    auto end = compiler->at - compiler->start;
+                    emit_jump_zero(&temp_compiler, end);
                 }break;
                 
                 case OP_LT:{
@@ -640,7 +657,18 @@ compile_function(Ast_Node* root, Compiler* compiler){
     auto function = &compiler->functions[compiler->function_count++];
     function->name = root->name;
     function->address = compiler->at - compiler->start;
+    function->stack_ptr = compiler->stack_ptr;
     int variables = compiler->variable_count;
+    
+    auto param = root->func.parameters;
+    while(param){
+        compiler->variables[compiler->variable_count].name = param->name;
+        compiler->variables[compiler->variable_count].address = compiler->stack_ptr;
+        compiler->variable_count++;
+        compiler->stack_ptr++;
+        param = param->next;
+    }
+    
     if(token_equals_string(root->name, "entry")){
         compile_scope_keep_variables(root->func.body, compiler);
     }else {

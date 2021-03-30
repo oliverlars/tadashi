@@ -106,6 +106,8 @@ token_equals_string(Token a, char* str){
     return true;
 }
 
+
+
 #define is_newline(x) ((x) == '\n' || (x) == '\r')
 #define is_whitespace(x) ((x) == ' ' || (x) == '\t' || (x) == '\v' || (x) == '\f' || is_newline(x))
 #define is_digit(x) ((x) <= '9' && (x) >= '0')

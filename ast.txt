@@ -1,21 +1,13 @@
-(function function_one
-  (decl x20 )
-  (return (+ x 1 )))
-(function function_two
-  (return (+ (+ 1 2 )3 )))
+(function dot
+a   (return (+ (+ (* )(* ))(* ))))
 (function entry
-  (decl string)
-  (for (decl x0 )
-(< x 5 )(decl x(+ x 1 ))
-
-    (decl random(ÉÝôÙD random (ØÝôÙD random 13 )))
-    (decl random(þÝôÙD random (H™¾ random 17 )))
-    (decl random(3ÞôÙD random (BÞôÙD random 5 )))
-    (decl arrayrandom )
-)  (for (decl i0 )
-(< i 13 )(decl i(+ i 1 ))
-
-    (for (decl j(+ i 1 ))
-(< j 13 )(decl j(+ j 1 ))
-
-      )))
+  (decl x)
+  (decl y)
+  (decl x0 )
+  (decl x0 )
+  (decl x0 )
+  (decl y0 )
+  (decl y0 )
+  (decl y0 )
+  (decl z(+ (+ (* 1 1 )(* 2 2 ))(* 3 3 )))
+)

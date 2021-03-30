@@ -63,9 +63,11 @@ int main(){
     compiler.at = (instruction*)malloc(sizeof(instruction)*MEMORY_SIZE);
     compiler.start = compiler.at;
     
-    compile_function(scope->scope.members, &compiler);
-    compile_function(scope->scope.members->next, &compiler);
-    compile_function(scope->scope.members->next->next, &compiler);
+    auto member = scope->scope.members;
+    while(member){
+        compile_function(member, &compiler);
+        member = member->next;
+    }
     
     
     

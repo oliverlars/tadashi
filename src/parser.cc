@@ -113,8 +113,22 @@ parse_base_expr(Parser* p){
         if(peek_token(&p->l).type == TOKEN_LEFT_PAREN){
             auto call = make_call_node();
             call->name = token;
-            get_token(&p->l);
-            get_token(&p->l); //HACK(Oliver): just to make the parser happy, 
+            expect_token(&p->l, TOKEN_LEFT_PAREN);
+            
+            auto args = &call->call.arguments;
+            while(!(peek_token(&p->l).type == TOKEN_RIGHT_PAREN)){
+                auto arg = parse_expr(p);
+                *args = arg;
+                args = &(*args)->next;
+                
+                if(!token_equals_string(peek_token(&p->l), ",")) {
+                    break;
+                }else {
+                    get_token(&p->l);
+                }
+            }
+            expect_token(&p->l, TOKEN_RIGHT_PAREN);
+            
             return call;
             // should parse arguments properly
         }else if(peek_token(&p->l).type == TOKEN_LEFT_BRACKET){
@@ -372,12 +386,16 @@ parse_function(Parser* p){
     
     auto params = &func->func.parameters;
     while(!tokens_equal(peek_token(&p->l), right_paren)){
-        auto param = parse_decl(p);
+        //auto param = parse_decl(p);
+        auto param = make_identifier_node();
+        param->name = get_token(&p->l);
         *params = param;
         params = &(*params)->next;
         
         if(!token_equals_string(peek_token(&p->l), ",")) {
             break;
+        }else {
+            get_token(&p->l);
         }
     }
     get_token(&p->l);

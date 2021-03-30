@@ -11,6 +11,7 @@ struct Variable {
 struct Function {
     Token name;
     int address;
+    int stack_ptr;
 };
 
 struct Compiler {
