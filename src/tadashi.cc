@@ -342,11 +342,11 @@ int main(){
                 printf("$%d | %.*s[%d]: %d\n", v.address +j, v.name.length, v.name.at, j, vm.memory[v.address+j]);
             }
         }else if(v.is_string){
-            printf("$%d | %.*s: ", v.address, v.name.length, v.name.at);
-            for(int j = 0; j < v.string.length; j++){
+            printf("$%d | %.*s: \"", v.address, v.name.length, v.name.at);
+            for(int j = 1; j <= v.array_length; j++){
                 printf("%c", vm.memory[v.address+j]);
             }
-            printf("\n");
+            printf("\"\n");
         }
         else{
             printf("$%d | %.*s: %d\n", v.address, v.name.length, v.name.at, vm.memory[v.address]);

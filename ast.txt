@@ -15,5 +15,8 @@
   (decl y1 )
   (decl y2 )
   (decl y3 )
+  (decl xyz)
+  (decl xyz65 )
+  (decl xyz98 )
   (decl product_result(call dot x ))
 )

@@ -149,6 +149,10 @@ parse_base_expr(Parser* p){
         auto value = make_value_node();
         value->value.number = token_to_value(token);
         return value;
+    }else if (token.type == TOKEN_CHAR){
+        auto value = make_value_node();
+        value->value.number = *token.at;
+        return value;
     }
     
     return nullptr;

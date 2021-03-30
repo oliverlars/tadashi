@@ -479,17 +479,23 @@ push_array(Compiler* compiler, Token name, int size){
 
 internal int
 push_string(Compiler* compiler, Token name, Token string){
-    int array = compiler->stack_ptr;
+    
+    auto ptr = compiler->stack_ptr;
+    set_commentf(compiler, "string set: %.*s", name.length, name.at);
+    emit_move_absolute(compiler, RA, compiler->stack_ptr+1);
+    emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
+    compiler->variables[compiler->variable_count].name = name;
+    compiler->variables[compiler->variable_count].address = ptr;
+    compiler->variables[compiler->variable_count].is_string = true;
+    compiler->variables[compiler->variable_count].array_length = string.length;
+    compiler->variable_count++;
+    
     for(int i = 0; i < string.length; i++){
         emit_move_absolute(compiler, RA, string.at[i]);
         emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
     }
-    compiler->variables[compiler->variable_count].name = name;
-    compiler->variables[compiler->variable_count].string = string;
-    compiler->variables[compiler->variable_count].address = array;
-    compiler->variables[compiler->variable_count].is_string = true;
-    compiler->variable_count++;
-    return array;
+    
+    return ptr;
 }
 
 internal void
@@ -868,7 +874,7 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
         }else {
             if(decl.is_array){
                 push_array(compiler, root->name, decl.array_length);
-            }else{
+            }else {
                 push_string(compiler, root->name, decl.string);
             }
         }

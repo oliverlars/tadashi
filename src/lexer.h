@@ -41,7 +41,10 @@ enum Token_Type {
     
     TOKEN_QUOTE,
     
+    TOKEN_SINGLE_QUOTE,
+    
     TOKEN_STRING,
+    TOKEN_CHAR,
     TOKEN_IDENTIFIER,
     TOKEN_NUMBER,
 };
@@ -76,6 +79,7 @@ char* token_types[] = {
     "<<",
     ">>"
         "^",
+    "\'",
     "STRING",
     "IDENTIFIER",
     "NUMBER"

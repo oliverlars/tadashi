@@ -17,6 +17,9 @@ fn entry() {
 	y[0] = 1;
 	y[1] = 2;
 	y[2] = 3;
+	xyz = "afdss";
+	xyz[0] = 'A';
+	xyz[2] = 'b';
 	product_result = dot(x, y);
 }
 
@@ -26,17 +29,13 @@ fn entry() {
 
 
 //add support for comments (like this one)
-// and also strings (syntactic sugar around arrays)
 // add unary - and +
-//parse all functions (currently is hard coded to the above 3)
 // while loops
 // add divides!!!!!
 // output debug info like where each block starts/ends (functions, ifs, fors, etc)
 // equals
-// parameters
 // and fix bugs
-// try out making a strlen function
-// separate declarations from assignments (to catch more errors)
+// try out making a strlen function (make strings c like)
 
 // a = [10]; make array of 10 numbers
 // a == address of array
