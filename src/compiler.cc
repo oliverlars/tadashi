@@ -434,7 +434,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     
                     emit_jump_unconditional(compiler, jump);
                     auto end = compiler->at - compiler->start;
-                    emit_jump_zero(&temp_compiler, end);
+                    emit_jump_not_positive(&temp_compiler, end);
                 }break;
                 
                 case OP_LT:{
