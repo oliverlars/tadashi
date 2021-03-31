@@ -7,11 +7,17 @@ fn dot(a, b){
 	return result;
 }
 
+fn strlen(s){
+	length = 0;
+	while s[length] {
+		length = length + 1;
+	}
+	return length;
+}
+
 fn entry() {
 	x = [3];
-	x[0] = 1; /* potato 
-	is cool and all
-	*/
+	x[0] = 1;
 	x[1] = 2;
 	x[2] = 3;
 	
@@ -19,10 +25,13 @@ fn entry() {
 	y[0] = 1;
 	y[1] = 2;
 	y[2] = 3;
-	xyz = "afdss";
-	xyz[0] = 'A';
-	xyz[2] = 'b';
+	xyz = "Hello, World";
+	dog = 0;
+	if y[0] != y[0] {
+		dog = 1;
+	}
 	product_result = dot(x, y);
+	string_length = strlen(xyz);
 }
 
 

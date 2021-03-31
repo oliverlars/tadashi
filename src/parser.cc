@@ -84,9 +84,9 @@ make_if_node(){
 
 internal Ast_Node*
 make_while_node(){
-    auto _if = make_ast_node();
-    _if->type = AST_IF;
-    return _if;
+    auto _while = make_ast_node();
+    _while->type = AST_WHILE;
+    return _while;
 }
 
 internal int
@@ -212,6 +212,8 @@ parse_binary_expr(Parser* p){
           (peek.type == TOKEN_RIGHT_ANGLE) ||
           (peek.type == TOKEN_LEFT_ANGLE_EQUAL) ||
           (peek.type == TOKEN_RIGHT_ANGLE_EQUAL) ||
+          (peek.type == TOKEN_EQUALS_EQUALS) ||
+          (peek.type == TOKEN_BANG_EQUALS) ||
           (peek.type == TOKEN_AMPERSAND_AMPERSAND) ||
           (peek.type == TOKEN_BAR_BAR)){
         auto bin = make_binary_node();
@@ -231,6 +233,10 @@ parse_binary_expr(Parser* p){
             bin->binary.op_type = OP_LOGICAL_AND;
         }else if(peek.type == TOKEN_BAR_BAR){
             bin->binary.op_type = OP_LOGICAL_OR;
+        }else if(peek.type == TOKEN_EQUALS_EQUALS){
+            bin->binary.op_type = OP_EQ;
+        }else if(peek.type == TOKEN_BANG_EQUALS){
+            bin->binary.op_type = OP_NOT_EQ;
         }
         
         get_token(&p->l);
@@ -345,6 +351,13 @@ parse_if(Parser* p){
 internal Ast_Node*
 parse_while(Parser* p) {
     auto _while = make_while_node();
+    get_token(&p->l);
+    auto expr = parse_expr(p);
+    expect_token(&p->l, TOKEN_LEFT_BRACE);
+    auto scope = parse_scope(p);
+    _while->_while.expr = expr;
+    _while->_while.body = scope;
+    expect_token(&p->l, TOKEN_RIGHT_BRACE);
     return _while;
 }
 

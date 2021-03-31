@@ -6,6 +6,10 @@
 
     (decl result(+ result (* )))
 )  (return result ))
+(function strlen
+(decl s)
+  (decl length0 )
+    (return length ))
 (function entry
   (decl x)
   (decl x1 )
@@ -16,7 +20,7 @@
   (decl y2 )
   (decl y3 )
   (decl xyz)
-  (decl xyz65 )
-  (decl xyz98 )
-  (decl product_result(call dot x ))
+  (decl dog0 )
+    (decl product_result(call dot x ))
+  (decl string_length(call strlen xyz ))
 )

@@ -487,14 +487,15 @@ push_string(Compiler* compiler, Token name, Token string){
     compiler->variables[compiler->variable_count].name = name;
     compiler->variables[compiler->variable_count].address = ptr;
     compiler->variables[compiler->variable_count].is_string = true;
-    compiler->variables[compiler->variable_count].array_length = string.length;
+    compiler->variables[compiler->variable_count].array_length = string.length+1;//strings are null terminated
     compiler->variable_count++;
     
     for(int i = 0; i < string.length; i++){
         emit_move_absolute(compiler, RA, string.at[i]);
         emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
     }
-    
+    emit_move_absolute(compiler, RA, 0);
+    emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
     return ptr;
 }
 
@@ -723,6 +724,22 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     emit_store_absolute(compiler, RA, result);
                 }break;
                 
+                case OP_EQ: {
+                    sub_temporaries(compiler, result, b);
+                    emit_move_absolute(compiler, RA, 0);
+                    emit_jump_not_zero(compiler, compiler->at - compiler->start +2);
+                    emit_move_absolute(compiler, RA, 1);
+                    emit_store_absolute(compiler, RA, result);
+                }break;
+                
+                case OP_NOT_EQ: {
+                    sub_temporaries(compiler, result, b);
+                    emit_move_absolute(compiler, RA, 0);
+                    emit_jump_zero(compiler, compiler->at - compiler->start +2);
+                    emit_move_absolute(compiler, RA, 1);
+                    emit_store_absolute(compiler, RA, result);
+                }break;
+                
                 case OP_LOGICAL_AND: {
                     add_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
@@ -789,6 +806,9 @@ compile_for(Ast_Node* root, Compiler* compiler);
 internal void
 compile_if(Ast_Node* root, Compiler* compiler);
 
+internal void
+compile_while(Ast_Node* root, Compiler* compiler);
+
 
 internal void
 compile_scope_keep_variables(Ast_Node* scope, Compiler* compiler){
@@ -808,6 +828,9 @@ compile_scope_keep_variables(Ast_Node* scope, Compiler* compiler){
             }break;
             case AST_IF: {
                 compile_if(member, compiler);
+            }break;
+            case AST_WHILE: {
+                compile_while(member, compiler);
             }break;
         }
         member = member->next;
@@ -858,6 +881,23 @@ compile_if(Ast_Node* root, Compiler* compiler){
         auto end = compiler->at - compiler->start;
         emit_jump_zero(&temp_compiler, end);
     }
+}
+
+internal void
+compile_while(Ast_Node* root, Compiler* compiler) {
+    auto start = compiler->at - compiler->start;
+    auto cond = compile_expression(root->_while.expr, RA, compiler);
+    emit_add_absolute(compiler, RA, 0);
+    
+    auto temp_compiler = *compiler;
+    compiler->at++;
+    
+    
+    compile_scope(root->_while.body, compiler);
+    emit_jump_unconditional(compiler, start);
+    
+    auto end = compiler->at - compiler->start;
+    emit_jump_zero(&temp_compiler, end);
 }
 
 

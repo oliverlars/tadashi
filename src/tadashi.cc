@@ -343,7 +343,7 @@ int main(){
             }
         }else if(v.is_string){
             printf("$%d | %.*s: \"", v.address, v.name.length, v.name.at);
-            for(int j = 1; j <= v.array_length; j++){
+            for(int j = 1; j <= v.array_length-1; j++){
                 printf("%c", vm.memory[v.address+j]);
             }
             printf("\"\n");
