@@ -9,7 +9,9 @@ fn dot(a, b){
 
 fn entry() {
 	x = [3];
-	x[0] = 1;
+	x[0] = 1; /* potato 
+	is cool and all
+	*/
 	x[1] = 2;
 	x[2] = 3;
 	

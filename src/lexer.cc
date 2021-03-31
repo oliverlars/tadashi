@@ -127,7 +127,23 @@ get_token(Lexer* l){
             token.type = TOKEN_PLUS;
         }break;
         case '/':{
-            token.type = TOKEN_FORWARD_SLASH;
+            if(peek_token(l).type == TOKEN_FORWARD_SLASH){
+                advance_lexer(l);
+                while(!is_newline(*l->at)){
+                    advance_lexer(l);
+                }
+                token = get_token(l);
+            }else if(peek_token(l).type == TOKEN_ASTERISK){
+                advance_lexer(l);
+                while(*l->at != '*' && *l->at++ != '/'){
+                    advance_lexer(l);
+                }
+                advance_lexer(l);
+                advance_lexer(l);
+                token = get_token(l);
+            }else {
+                token.type = TOKEN_FORWARD_SLASH;
+            }
         }break;
         case '*':{
             token.type = TOKEN_ASTERISK;
