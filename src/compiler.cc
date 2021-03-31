@@ -292,6 +292,24 @@ emit_load_register(Compiler* compiler, Register x, Register y){
 }
 
 internal void
+emit_and_register(Compiler* compiler, Register x, Register y){
+    *compiler->at = OP_AND_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
+    *compiler->at += (int)y << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    dissassemble(compiler);
+    compiler->at++;
+}
+
+internal void
+emit_or_register(Compiler* compiler, Register x, Register y){
+    *compiler->at = OP_OR_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
+    *compiler->at += (int)y << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH*2);
+    dissassemble(compiler);
+    compiler->at++;
+}
+
+internal void
 emit_add_register(Compiler* compiler, Register x, Register y){
     *compiler->at = OP_ADD_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
@@ -310,7 +328,7 @@ emit_sl_register(Compiler* compiler, Register x){
 
 internal void
 emit_sr_register(Compiler* compiler, Register x){
-    *compiler->at = OP_SL0_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
+    *compiler->at = OP_SR0_REGISTER << (INSTRUCTION_LENGTH-OPCODE_LENGTH);
     *compiler->at += (int)x << (INSTRUCTION_LENGTH-OPCODE_LENGTH-REGISTER_LENGTH);
     dissassemble(compiler);
     compiler->at++;
@@ -533,6 +551,22 @@ add_temporaries(Compiler* compiler, int address_x, int address_y){
 }
 
 internal void
+and_temporaries(Compiler* compiler, int address_x, int address_y){
+    emit_load_absolute(compiler, RA,  address_x);
+    emit_load_absolute(compiler, RB,  address_y);
+    emit_and_register(compiler, RA, RB);
+    emit_store_absolute(compiler, RA,  address_x);
+}
+
+internal void
+or_temporaries(Compiler* compiler, int address_x, int address_y){
+    emit_load_absolute(compiler, RA,  address_x);
+    emit_load_absolute(compiler, RB,  address_y);
+    emit_or_register(compiler, RA, RB);
+    emit_store_absolute(compiler, RA,  address_x);
+}
+
+internal void
 sl_temporary(Compiler* compiler, int address_x){
     emit_load_absolute(compiler, RA,  address_x);
     emit_sl_register(compiler, RA);
@@ -741,33 +775,42 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 }break;
                 
                 case OP_LOGICAL_AND: {
-                    add_temporaries(compiler, result, b);
+                    and_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
+                    emit_jump_zero(compiler, compiler->at - compiler->start +2);
+                    emit_move_absolute(compiler, RA, 1);
+                    emit_store_absolute(compiler, RA, result);
+                }break;
+                
+                case OP_BITWISE_AND: {
+                    and_temporaries(compiler, result, b);
+                }break;
+                
+                case OP_LOGICAL_OR: {
+                    or_temporaries(compiler, result, b);
+                    emit_move_absolute(compiler, RA, 0);
+                    emit_jump_zero(compiler, compiler->at - compiler->start +2);
+                    emit_move_absolute(compiler, RA, 1);
+                    emit_store_absolute(compiler, RA, result);
+                }break;
+                
+                case OP_BITWISE_OR: {
+                    or_temporaries(compiler, result, b);
                 }break;
                 
                 case OP_SL:{
-                    
-                    
                     int count = duplicate_temporary(compiler, b);
                     auto jump = compiler->at;
-                    
                     sl_temporary(compiler, result);
-                    
                     sub_temporary_absolute(compiler, count, 1);
-                    
                     emit_jump_positive(compiler, jump - compiler->start);
-                    
                 }break;
                 
                 case OP_SR:{
-                    
                     int count = duplicate_temporary(compiler, b);
                     auto jump = compiler->at;
-                    
                     sr_temporary(compiler, result);
-                    
                     sub_temporary_absolute(compiler, count, 1);
-                    
                     emit_jump_positive(compiler, jump - compiler->start);
                 }break;
                 

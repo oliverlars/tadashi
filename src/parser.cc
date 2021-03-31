@@ -215,6 +215,8 @@ parse_binary_expr(Parser* p){
           (peek.type == TOKEN_EQUALS_EQUALS) ||
           (peek.type == TOKEN_BANG_EQUALS) ||
           (peek.type == TOKEN_AMPERSAND_AMPERSAND) ||
+          (peek.type == TOKEN_AMPERSAND) ||
+          (peek.type == TOKEN_BAR) ||
           (peek.type == TOKEN_BAR_BAR)){
         auto bin = make_binary_node();
         if(peek.type == TOKEN_PLUS){
@@ -237,6 +239,10 @@ parse_binary_expr(Parser* p){
             bin->binary.op_type = OP_EQ;
         }else if(peek.type == TOKEN_BANG_EQUALS){
             bin->binary.op_type = OP_NOT_EQ;
+        }else if(peek.type == TOKEN_BAR){
+            bin->binary.op_type = OP_BITWISE_OR;
+        }else if(peek.type == TOKEN_AMPERSAND){
+            bin->binary.op_type = OP_BITWISE_AND;
         }
         
         get_token(&p->l);
@@ -481,7 +487,6 @@ pretty_print(FILE* file, Ast_Node* root, int indent=0){
         
         case AST_BINARY:{
             fprintf(file, "(");
-            char* ops[] = { "+", "-", "*", "/", "<", ">", "<=", ">=", "!=", "==" };
             fprintf(file, "%s ", ops[root->binary.op_type]);
             pretty_print(file, root->binary.left);
             pretty_print(file, root->binary.right);

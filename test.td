@@ -26,18 +26,9 @@ fn entry() {
 	y[1] = 2;
 	y[2] = 3;
 	xyz = "Hello, World";
-	dog = 0;
-	if y[0] != y[0] {
-		dog = 1;
-	}
 	product_result = dot(x, y);
 	string_length = strlen(xyz);
 }
-
-
-
-
-
 
 //add support for comments (like this one)
 // add unary - and +
@@ -54,6 +45,7 @@ fn entry() {
 // pass by value to functions
 // take a address and add offset
 // dereference a + offset to read/write
+// add string/array reassignment
 /*
 	string = "zdsfjlasfjlk;";
 	for x = 0; x < 5; x = x + 1 {

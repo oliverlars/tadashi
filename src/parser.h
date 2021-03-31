@@ -32,10 +32,32 @@ enum Op_Type {
     OP_NOT_EQ,
     OP_EQ,
     OP_LOGICAL_AND,
+    OP_BITWISE_AND,
     OP_LOGICAL_OR,
+    OP_BITWISE_OR,
     OP_SL,
     OP_SR,
     OP_XOR,
+};
+
+char* ops[] = {
+    "+",
+    "-",
+    "*",
+    "/",
+    "<",
+    ">",
+    "<=",
+    ">=",
+    "!=",
+    "==",
+    "&&",
+    "&",
+    "||",
+    "|",
+    "<<",
+    ">>",
+    "^",
 };
 
 enum Prim_Type {

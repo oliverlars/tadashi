@@ -188,28 +188,43 @@ int main(){
                 int x = get_register_x(instr);
                 int y = get_register_y(instr);
                 vm.registers[x] = vm.registers[x] & vm.registers[y];
+                vm.zero = vm.registers[x] == 0;
+                vm.positive = vm.registers[x] > 0;
+                vm.negative = vm.registers[x] < 0;
             }break;
             
             case OP_OR_REGISTER:{
                 int x = get_register_x(instr);
                 int y = get_register_y(instr);
                 vm.registers[x] = vm.registers[x] | vm.registers[y];
+                vm.zero = vm.registers[x] == 0;
+                vm.positive = vm.registers[x] > 0;
+                vm.negative = vm.registers[x] < 0;
             }break;
             
             case OP_XOR_REGISTER:{
                 int x = get_register_x(instr);
                 int y = get_register_y(instr);
                 vm.registers[x] = vm.registers[x] ^ vm.registers[y];
+                vm.zero = vm.registers[x] == 0;
+                vm.positive = vm.registers[x] > 0;
+                vm.negative = vm.registers[x] < 0;
             }break;
             
             case OP_SR0_REGISTER:{
                 int x = get_register_x(instr);
                 vm.registers[x] = vm.registers[x] >> 1;
+                vm.zero = vm.registers[x] == 0;
+                vm.positive = vm.registers[x] > 0;
+                vm.negative = vm.registers[x] < 0;
             }break;
             
             case OP_SL0_REGISTER:{
                 int x = get_register_x(instr);
                 vm.registers[x] = vm.registers[x] << 1;
+                vm.zero = vm.registers[x] == 0;
+                vm.positive = vm.registers[x] > 0;
+                vm.negative = vm.registers[x] < 0;
             }break;
             
             case OP_ROR_REGISTER:{
