@@ -1,3 +1,3 @@
 (function entry
-  (decl test(+ 1 (- 5 )))
+  (decl test(!= 1 ))
 )

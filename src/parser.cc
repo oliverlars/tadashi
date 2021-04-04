@@ -536,7 +536,6 @@ pretty_print(FILE* file, Ast_Node* root, int indent=0){
         
         case AST_UNARY: {
             fprintf(file, "(");
-            char* ops[] = { "+", "-" };
             fprintf(file, "%s ", ops[root->unary.op_type]);
             pretty_print(file, root->unary.right, indent);
             fprintf(file, ")");

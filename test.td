@@ -1,4 +1,4 @@
 
 fn entry() {
-	test = 1 + -5;
+	test = !1;
 }
