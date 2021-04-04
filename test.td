@@ -1,4 +1,4 @@
 
 fn entry() {
-	test = 21 / 0;
+	test = 1 + -5;
 }

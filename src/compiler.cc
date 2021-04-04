@@ -695,6 +695,24 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             //emit_move_absolute(compiler, r, root->value.number);
             return push_temporary(compiler, root->value.number);
         }break;
+        case AST_UNARY: {
+            int right = compile_expression(root->unary.right, RA, compiler);
+            
+            switch(root->unary.op_type){
+                case OP_SUB: {
+                    auto zero = push_temporary(compiler, 0);
+                    emit_move_absolute(compiler, RA, 0);
+                    emit_load_absolute(compiler, RB, right);
+                    emit_sub_register(compiler, RA, RB);
+                    emit_store_absolute(compiler, RA, right);
+                }break;
+                case OP_ADD: {
+                }break;
+                case OP_NOT: {
+                }break;
+            }
+            
+        }break;
         case AST_BINARY: {
             int a = compile_expression(root->binary.left, RA, compiler);
             int b = compile_expression(root->binary.right, RB, compiler);

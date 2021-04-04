@@ -13,6 +13,13 @@ make_binary_node(){
 }
 
 internal Ast_Node*
+make_unary_node(){
+    auto binary = make_ast_node();
+    binary->type = AST_UNARY;
+    return binary;
+}
+
+internal Ast_Node*
 make_function_node(){
     auto func = make_ast_node();
     func->type = AST_FUNCTION;
@@ -160,8 +167,26 @@ parse_base_expr(Parser* p){
 
 internal Ast_Node*
 parse_unary_expr(Parser* p){
-    auto unary = parse_base_expr(p);
-    return unary;
+    auto expr = make_unary_node();
+    auto peek = peek_token(&p->l);
+    if(peek.type == TOKEN_MINUS){
+        get_token(&p->l);
+        expr->unary.op_type = OP_SUB;
+        expr->unary.right = parse_base_expr(p);
+        
+    }else if(peek.type == TOKEN_PLUS){
+        get_token(&p->l);
+        expr->unary.op_type = OP_ADD;
+        expr->unary.right = parse_base_expr(p);
+        
+    }else if(peek.type == TOKEN_BANG){
+        get_token(&p->l);
+        expr->unary.op_type = OP_NOT;
+        expr->unary.right = parse_base_expr(p);
+    }else {
+        expr = parse_base_expr(p);
+    }
+    return expr;
 }
 
 internal Ast_Node*
