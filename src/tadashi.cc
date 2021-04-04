@@ -45,6 +45,16 @@ register allocation: just make all variables dirty and slap a bunch of
 load/stores on everything
 */
 
+internal void
+instructions_to_td(Compiler* compiler){
+    FILE* file = fopen("instructions.td", "w");
+    auto instr = compiler->start;
+    while(instr != compiler->at){
+        fprintf(file, "memory[%d] = %d;\n", instr - compiler->start, *instr++);
+    }
+    fclose(file);
+}
+
 
 int main(){
     Lexer lexer = {};
@@ -58,17 +68,16 @@ int main(){
     
     Compiler compiler = {};
     // TODO(Oliver): use arena
-    compiler.at = (instruction*)malloc(sizeof(instruction)*MEMORY_SIZE);
+    compiler.at = (instruction*)calloc(MEMORY_SIZE, sizeof(instruction));
     compiler.start = compiler.at;
-    compiler.comment_arena = make_arena(8192);
+    compiler.comment_arena = make_arena(8192*8192);
+    
     
     auto member = scope->scope.members;
     while(member){
         compile_function(member, &compiler);
         member = member->next;
     }
-    
-    
     
     VM vm = {};
     
@@ -77,12 +86,15 @@ int main(){
     
     auto start = compiler.at - compiler.start;
     
-    emit_move_absolute(&compiler, RC, 1024); //function address pointer
+    emit_move_absolute(&compiler, RC, 55000); //function address pointer
     
     emit_jump_function(&compiler, "entry");
     
     vm.memory = compiler.start;
     vm.pc = start;
+    instructions_to_td(&compiler);
+    
+    printf("PC IS: %d", vm.pc);
     
     while(vm.pc < (compiler.at - compiler.start)){
         
@@ -133,25 +145,25 @@ int main(){
             case OP_AND_ABSOLUTE:{
                 int r = get_register_x(instr);
                 int operand = get_operand(instr);
-                vm.registers[r] = vm.registers[r] + operand;
+                vm.registers[r] = vm.registers[r] & operand;
             }break;
             
             case OP_OR_ABSOLUTE:{
                 int r = get_register_x(instr);
                 int operand = get_operand(instr);
-                vm.registers[r] = vm.registers[r] + operand;
+                vm.registers[r] = vm.registers[r] | operand;
             }break;
             
             case OP_XOR_ABSOLUTE:{
                 int r = get_register_x(instr);
                 int operand = get_operand(instr);
-                vm.registers[r] = vm.registers[r] + operand;
+                vm.registers[r] = vm.registers[r] ^ operand;
             }break;
             
             case OP_MOVE_REGISTER:{
-                int r = get_register_x(instr);
-                int operand = get_operand(instr);
-                vm.registers[r] = vm.registers[r] + operand;
+                int rx = get_register_x(instr);
+                int ry = get_register_y(instr);
+                vm.registers[rx] = vm.registers[ry];
             }break;
             
             case OP_ADD_REGISTER:{
@@ -351,7 +363,7 @@ int main(){
     printf("\n");
     for(int i = 0; i < compiler.variable_count; i++){
         auto v = compiler.variables[i];
-        if(v.is_array){
+        if(v.is_array && v.array_length < 64){
             printf("$%d | %.*s: %d\n", v.address, v.name.length, v.name.at, vm.memory[v.address]);
             for(int j = 1; j <= v.array_length; j++){
                 printf("$%d | %.*s[%d]: %d\n", v.address +j, v.name.length, v.name.at, j, vm.memory[v.address+j]);

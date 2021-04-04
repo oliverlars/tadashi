@@ -554,5 +554,11 @@ pretty_print(FILE* file, Ast_Node* root, int indent=0){
             pretty_print(file, root->_for.body, indent+1);
             fprintf(file, ")");
         }break;
+        
+        case AST_INDEX: {
+            fprintf(file, "(");
+            fprintf(file, "%.*s", root->name.length, root->name.at);
+            pretty_print(file, root->index.offset);
+        }break;
     }
 }

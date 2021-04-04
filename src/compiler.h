@@ -14,6 +14,9 @@ struct Function {
     int stack_ptr;
 };
 
+#define MAX_VARIABLE (2048)
+#define MAX_FUNCTION (1024)
+
 struct Compiler {
     instruction* at;
     instruction* start;
@@ -21,13 +24,13 @@ struct Compiler {
     bool has_comment;
     char* comment;
     
-    Variable variables[256]; //arbitrary limit
+    Variable variables[MAX_VARIABLE]; //arbitrary limit
     int variable_count;
     
-    Function functions[256];
+    Function functions[MAX_FUNCTION];
     int function_count;
     
-    int stack_ptr = 512;
+    int stack_ptr = 8192;
     
     Arena comment_arena;
 };

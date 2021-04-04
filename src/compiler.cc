@@ -432,7 +432,7 @@ emit_call(Compiler* compiler, int address){
 internal int
 find_local(Compiler* compiler, Token name){
     int result = 0;
-    for(; result < 256; result++){
+    for(; result < 2048; result++){
         auto v = compiler->variables[result];
         if(tokens_equal(name, v.name)){
             return result;
@@ -487,10 +487,7 @@ push_array(Compiler* compiler, Token name, int size){
     compiler->variables[compiler->variable_count].array_length = size;
     compiler->variable_count++;
     
-    for(int i = 0; i < size; i++){
-        emit_move_absolute(compiler, RA, 0);
-        emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
-    }
+    compiler->stack_ptr += size;
     
     return ptr;
 }
@@ -605,7 +602,7 @@ copy_temporary(Compiler* compiler, int address_x, int address_y){
 internal int
 find_function(Compiler* compiler, Token name){
     int i = 0;
-    for(; i < 256; i++){
+    for(; i < MAX_FUNCTION; i++){
         if(tokens_equal(name, compiler->functions[i].name)){
             return i;
         }
@@ -616,7 +613,7 @@ find_function(Compiler* compiler, Token name){
 internal int
 find_function(Compiler* compiler, char* name){
     int i = 0;
-    for(; i < 256; i++){
+    for(; i < MAX_FUNCTION; i++){
         if(token_equals_string(compiler->functions[i].name, name)){
             return i;
         }
@@ -720,6 +717,20 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     compiler->at++;
                     
                     add_temporaries(compiler, result, a);
+                    
+                    emit_jump_unconditional(compiler, jump);
+                    auto end = compiler->at - compiler->start;
+                    emit_jump_not_positive(&temp_compiler, end);
+                }break;
+                
+                case OP_DIV: {
+                    result = push_temporary(compiler, 0);
+                    auto count = duplicate_temporary(compiler, a);
+                    auto jump = compiler->at - compiler->start;
+                    auto temp_compiler = *compiler;
+                    compiler->at++;
+                    add_temporary_absolute(compiler, result, 1);
+                    sub_temporaries(compiler, count, b);
                     
                     emit_jump_unconditional(compiler, jump);
                     auto end = compiler->at - compiler->start;
@@ -995,6 +1006,7 @@ compile_function(Ast_Node* root, Compiler* compiler){
     function->stack_ptr = compiler->stack_ptr;
     int variables = compiler->variable_count;
     
+    int variable_count = compiler->variable_count;
     auto param = root->func.parameters;
     while(param){
         compiler->variables[compiler->variable_count].name = param->name;
@@ -1008,6 +1020,7 @@ compile_function(Ast_Node* root, Compiler* compiler){
         compile_scope_keep_variables(root->func.body, compiler);
     }else {
         compile_scope(root->func.body, compiler);
+        compiler->variable_count = variable_count;
     }
     set_commentf(compiler, "function return: %.*s", root->name.length, root->name.at);
     emit_sub_absolute(compiler, RC, 1);
