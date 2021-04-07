@@ -1,7 +1,7 @@
 
 internal Ast_Node*
 make_ast_node(){
-    auto ast = push_type_zero(&global_node_arena, Ast_Node);
+    auto ast = push_type_zero(&global_arena, Ast_Node);
     return ast;
 }
 
@@ -105,7 +105,7 @@ token_to_value(Token token){
     return result;
 }
 
-Ast_Node* parse_expr(Parser* p);
+internal Ast_Node* parse_expr(Parser* p);
 
 internal Ast_Node*
 parse_base_expr(Parser* p){
@@ -328,7 +328,7 @@ parse_call(Parser* p){
     return nullptr;
 }
 
-Ast_Node* parse_scope(Parser* p);
+internal Ast_Node* parse_scope(Parser* p);
 
 internal Ast_Node*
 parse_stmt(Parser* p);
@@ -507,7 +507,7 @@ pretty_print(FILE* file, Ast_Node* root, int indent=0){
     switch(root->type){
         
         case AST_IDENTIFIER:{
-            fprintf(file, "%.*s ", root->name.length, root->name.at);
+            fprintf(file, "%.*s ", (int)root->name.length, root->name.at);
         }break;
         
         case AST_BINARY:{
@@ -521,7 +521,7 @@ pretty_print(FILE* file, Ast_Node* root, int indent=0){
         
         case AST_FUNCTION: {
             fprintf(file, "(");
-            fprintf(file, "function %.*s\n", root->name.length, root->name.at);
+            fprintf(file, "function %.*s\n", (int)root->name.length, root->name.at);
             pretty_print(file, root->func.parameters);
             pretty_print(file, root->func.body, indent+1);
             fprintf(file, ")\n");
@@ -529,7 +529,7 @@ pretty_print(FILE* file, Ast_Node* root, int indent=0){
         
         case AST_FUNCTION_CALL: {
             fprintf(file, "(");
-            fprintf(file, "call %.*s ", root->name.length, root->name.at);
+            fprintf(file, "call %.*s ", (int)root->name.length, root->name.at);
             pretty_print(file, root->call.arguments, indent);
             fprintf(file, ")");
         }break;
@@ -544,7 +544,7 @@ pretty_print(FILE* file, Ast_Node* root, int indent=0){
         case AST_DECLARATION: {
             fprintf(file, "(");
             fprintf(file, "decl ");
-            fprintf(file, "%.*s", root->name.length, root->name.at);
+            fprintf(file, "%.*s", (int)root->name.length, root->name.at);
             pretty_print(file, root->decl.expr, 0);
             fprintf(file, ")\n");
         }break;
@@ -581,7 +581,7 @@ pretty_print(FILE* file, Ast_Node* root, int indent=0){
         
         case AST_INDEX: {
             fprintf(file, "(");
-            fprintf(file, "%.*s", root->name.length, root->name.at);
+            fprintf(file, "%.*s", (int)root->name.length, root->name.at);
             pretty_print(file, root->index.offset);
         }break;
     }

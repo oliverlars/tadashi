@@ -2,7 +2,7 @@
 
 set application_name=tadashi
 set build_options= -DBUILD_WIN32=1
-set compile_flags= -nologo /FS /W0 /Zi /FC /Zc:preprocessor /I ../src/
+set compile_flags= -nologo /FS -W0 /Zc:preprocessor /I ../src/
 set common_link_flags= -opt:ref -incremental:no /Debug:FULL /STACK:0x200000,0x200000
 
 if not exist build mkdir build

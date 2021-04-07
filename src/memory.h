@@ -1,6 +1,10 @@
+#define ARENA_MAX          Gigabytes(4)
+#define ARENA_COMMIT_SIZE  Kilobytes(4)
 
 struct Arena {
-    u8* data;
-    u64 capacity;
-    u64 used;
+    void* base;
+    u64 size;
+    u64 alloc_position;
+    u64 commit_position;
+    
 };

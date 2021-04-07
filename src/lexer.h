@@ -87,7 +87,7 @@ char* token_types[] = {
 
 struct Token {
     char* at;
-    int length;
+    u64 length;
     Token_Type type;
 };
 

@@ -6,7 +6,7 @@ dissassemble(Compiler* compiler) {
     char* reg[4] = {"RA", "RB", "RC", "RD"};
     auto instr = *compiler->at;
     int opcode = get_opcode(instr);
-    printf("%d: ", compiler->at - compiler->start);
+    printf("%d: ", (int)(compiler->at - compiler->start));
     switch(opcode){
         
         case OP_MOVE_ABSOLUTE:{
@@ -107,7 +107,7 @@ dissassemble(Compiler* compiler) {
         
         case OP_SR0_REGISTER:{
             int x = get_register_x(instr);
-            printf("sr %s, %s", reg[x]);
+            printf("sr %s, 1", reg[x]);
         }break;
         
         case OP_SL0_REGISTER:{
@@ -626,7 +626,7 @@ emit_jump_function(Compiler* compiler, char* function){
     int function_index = find_function(compiler, function);
     assert(function_index >= 0);
     auto f = compiler->functions[function_index];
-    emit_move_absolute(compiler, RD, compiler->at - compiler->start + 5);
+    emit_move_absolute(compiler, RD, (int)(compiler->at - compiler->start) + 5);
     emit_store_register(compiler, RD, RC);
     emit_add_absolute(compiler, RC, 1);
     emit_move_absolute(compiler, RD, f.address);
@@ -640,7 +640,7 @@ emit_jump_function(Compiler* compiler, Token function){
     assert(function_index >= 0);
     auto f = compiler->functions[function_index];
     
-    emit_move_absolute(compiler, RD, compiler->at - compiler->start + 5);
+    emit_move_absolute(compiler, RD, (int)(compiler->at - compiler->start) + 5);
     emit_store_register(compiler, RD, RC);
     emit_add_absolute(compiler, RC, 1);
     emit_move_absolute(compiler, RD, f.address);
@@ -711,7 +711,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 case OP_NOT: {
                     add_temporary_absolute(compiler, right, 0);
                     emit_move_absolute(compiler, RA, 0);
-                    emit_jump_positive(compiler, compiler->at - compiler->start +2);
+                    emit_jump_positive(compiler, (int)(compiler->at - compiler->start) +2);
                     emit_move_absolute(compiler, RA, 1);
                     emit_store_absolute(compiler, RA, result);
                 }break;
@@ -734,7 +734,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 case OP_MUL:{
                     int count = duplicate_temporary(compiler, b);
                     emit_load_absolute(compiler, RB, b);
-                    auto jump = compiler->at - compiler->start;
+                    auto jump = (int)(compiler->at - compiler->start);
                     sub_temporary_absolute(compiler, count, 1);
                     auto temp_compiler = *compiler;
                     compiler->at++;
@@ -742,28 +742,28 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     add_temporaries(compiler, result, a);
                     
                     emit_jump_unconditional(compiler, jump);
-                    auto end = compiler->at - compiler->start;
+                    auto end = (int)(compiler->at - compiler->start);
                     emit_jump_not_positive(&temp_compiler, end);
                 }break;
                 
                 case OP_DIV: {
                     result = push_temporary(compiler, 0);
                     auto count = duplicate_temporary(compiler, a);
-                    auto jump = compiler->at - compiler->start;
+                    auto jump = (int)(compiler->at - compiler->start);
                     auto temp_compiler = *compiler;
                     compiler->at++;
                     add_temporary_absolute(compiler, result, 1);
                     sub_temporaries(compiler, count, b);
                     
                     emit_jump_unconditional(compiler, jump);
-                    auto end = compiler->at - compiler->start;
+                    auto end = (int)(compiler->at - compiler->start);
                     emit_jump_not_positive(&temp_compiler, end);
                 }break;
                 
                 case OP_LT:{
                     sub_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
-                    emit_jump_not_negative(compiler, compiler->at - compiler->start +2);
+                    emit_jump_not_negative(compiler, (int)(compiler->at - compiler->start) +2);
                     emit_move_absolute(compiler, RA, 1);
                     emit_store_absolute(compiler, RA, result);
                 }break;
@@ -771,7 +771,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 case OP_LTE:{
                     sub_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
-                    emit_jump_positive(compiler, compiler->at - compiler->start +2);
+                    emit_jump_positive(compiler, (int)(compiler->at - compiler->start) +2);
                     emit_move_absolute(compiler, RA, 1);
                     emit_store_absolute(compiler, RA, result);
                 }break;
@@ -779,7 +779,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 case OP_GT:{
                     sub_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
-                    emit_jump_not_positive(compiler, compiler->at - compiler->start +2);
+                    emit_jump_not_positive(compiler, (int)(compiler->at - compiler->start) +2);
                     emit_move_absolute(compiler, RA, 1);
                     emit_store_absolute(compiler, RA, result);
                 }break;
@@ -787,7 +787,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 case OP_GTE:{
                     sub_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
-                    emit_jump_negative(compiler, compiler->at - compiler->start +2);
+                    emit_jump_negative(compiler, (int)(compiler->at - compiler->start) +2);
                     emit_move_absolute(compiler, RA, 1);
                     emit_store_absolute(compiler, RA, result);
                 }break;
@@ -795,7 +795,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 case OP_EQ: {
                     sub_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
-                    emit_jump_not_zero(compiler, compiler->at - compiler->start +2);
+                    emit_jump_not_zero(compiler, (int)(compiler->at - compiler->start) +2);
                     emit_move_absolute(compiler, RA, 1);
                     emit_store_absolute(compiler, RA, result);
                 }break;
@@ -803,7 +803,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 case OP_NOT_EQ: {
                     sub_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
-                    emit_jump_zero(compiler, compiler->at - compiler->start +2);
+                    emit_jump_zero(compiler, (int)(compiler->at - compiler->start) +2);
                     emit_move_absolute(compiler, RA, 1);
                     emit_store_absolute(compiler, RA, result);
                 }break;
@@ -811,7 +811,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 case OP_LOGICAL_AND: {
                     and_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
-                    emit_jump_zero(compiler, compiler->at - compiler->start +2);
+                    emit_jump_zero(compiler, (int)(compiler->at - compiler->start) +2);
                     emit_move_absolute(compiler, RA, 1);
                     emit_store_absolute(compiler, RA, result);
                 }break;
@@ -823,7 +823,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 case OP_LOGICAL_OR: {
                     or_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
-                    emit_jump_zero(compiler, compiler->at - compiler->start +2);
+                    emit_jump_zero(compiler, (int)(compiler->at - compiler->start) +2);
                     emit_move_absolute(compiler, RA, 1);
                     emit_store_absolute(compiler, RA, result);
                 }break;
@@ -837,7 +837,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     auto jump = compiler->at;
                     sl_temporary(compiler, result);
                     sub_temporary_absolute(compiler, count, 1);
-                    emit_jump_positive(compiler, jump - compiler->start);
+                    emit_jump_positive(compiler, (int)(jump - compiler->start));
                 }break;
                 
                 case OP_SR:{
@@ -845,7 +845,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     auto jump = compiler->at;
                     sr_temporary(compiler, result);
                     sub_temporary_absolute(compiler, count, 1);
-                    emit_jump_positive(compiler, jump - compiler->start);
+                    emit_jump_positive(compiler, (int)(jump - compiler->start));
                 }break;
                 
                 case OP_XOR:{
@@ -861,7 +861,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             int local = find_local(compiler, root->name);
             set_commentf(compiler, "ref identifier: %.*s", root->name.length, root->name.at);
             if(local < 0){
-                printf("variable \"%.*s\" is not defined in this scope", root->name.length, root->name.at);
+                printf("variable \"%.*s\" is not defined in this scope", (int)root->name.length, root->name.at);
                 exit(0);
             }
             if(compiler->variables[local].is_array){
@@ -924,7 +924,7 @@ compile_scope(Ast_Node* scope, Compiler* compiler){
 internal void
 compile_for(Ast_Node* root, Compiler* compiler){
     compile_declaration(root->_for.decl, compiler);
-    auto start = compiler->at - compiler->start;
+    auto start = (int)(compiler->at - compiler->start);
     int cond = compile_expression(root->_for.cond, RA, compiler);
     emit_add_absolute(compiler, RA, 0);
     auto temp_compiler = *compiler;
@@ -932,7 +932,7 @@ compile_for(Ast_Node* root, Compiler* compiler){
     compile_scope(root->_for.body, compiler);
     compile_declaration(root->_for.stmt, compiler);
     emit_jump_unconditional(compiler, start);
-    auto end = compiler->at - compiler->start;
+    auto end = (int)(compiler->at - compiler->start);
     emit_jump_zero(&temp_compiler, end);
 }
 
@@ -949,20 +949,20 @@ compile_if(Ast_Node* root, Compiler* compiler){
         auto temp_compiler2 = *compiler; //we don't know where we will need to jump to yet
         compiler->at++;
         
-        auto _else = compiler->at - compiler->start;
+        auto _else = (int)(compiler->at - compiler->start);
         emit_jump_zero(&temp_compiler, _else);
         compile_scope(root->_if._else, compiler);
-        auto end = compiler->at - compiler->start;
+        auto end = (int)(compiler->at - compiler->start);
         emit_jump_unconditional(&temp_compiler2, end);
     }else {
-        auto end = compiler->at - compiler->start;
+        auto end = (int)(compiler->at - compiler->start);
         emit_jump_zero(&temp_compiler, end);
     }
 }
 
 internal void
 compile_while(Ast_Node* root, Compiler* compiler) {
-    auto start = compiler->at - compiler->start;
+    auto start = (int)(compiler->at - compiler->start);
     auto cond = compile_expression(root->_while.expr, RA, compiler);
     emit_add_absolute(compiler, RA, 0);
     
@@ -973,7 +973,7 @@ compile_while(Ast_Node* root, Compiler* compiler) {
     compile_scope(root->_while.body, compiler);
     emit_jump_unconditional(compiler, start);
     
-    auto end = compiler->at - compiler->start;
+    auto end = (int)(compiler->at - compiler->start);
     emit_jump_zero(&temp_compiler, end);
 }
 
@@ -1025,7 +1025,7 @@ compile_function(Ast_Node* root, Compiler* compiler){
     
     auto function = &compiler->functions[compiler->function_count++];
     function->name = root->name;
-    function->address = compiler->at - compiler->start;
+    function->address = (int)(compiler->at - compiler->start);
     function->stack_ptr = compiler->stack_ptr;
     int variables = compiler->variable_count;
     

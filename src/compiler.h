@@ -5,7 +5,7 @@ struct Variable {
     int address;
     bool is_array;
     bool is_string;
-    int array_length;
+    u64 array_length;
 };
 
 struct Function {

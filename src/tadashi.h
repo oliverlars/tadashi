@@ -34,6 +34,12 @@ typedef float f32;
 typedef double f64;
 
 
+struct File {
+    char* bytes;
+    s64 length;
+};
+
+
 const u64 U64Max_ = ((u64)-1);
 const u32 U32Max_ = ((u32)-1);
 const f32 F32Max_ = FLT_MAX;

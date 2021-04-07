@@ -50,6 +50,7 @@ char* ops[] = {
     ">",
     "<=",
     ">=",
+    "!",
     "!=",
     "==",
     "&&",
@@ -129,4 +130,3 @@ struct Ast_Node {
     };
 };
 
-global Arena global_node_arena;

@@ -1,4 +1,4 @@
 
 fn entry() {
-	test = !1;
+	potato = 10;
 }

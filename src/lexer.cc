@@ -218,7 +218,7 @@ internal Token
 expect_token(Lexer* l, Token_Type type){
     Token peek = peek_token(l);
     if(peek.type != type){
-        printf("expected token %s but got %.*s", token_types[type], peek.length, peek.at);
+        printf("expected token %s but got %.*s", token_types[type], (int)peek.length, peek.at);
         exit(0);
     }
     return get_token(l);
@@ -228,7 +228,7 @@ internal Token
 expect_keyword(Lexer* l, char* str){
     Token peek = peek_token(l);
     if(!token_equals_string(peek, str)){
-        printf("expected keyword %s but got %.*s", str, peek.length, peek.at);
+        printf("expected keyword %s but got %.*s", str, (int)peek.length, peek.at);
         exit(0);
     }
     return get_token(l);

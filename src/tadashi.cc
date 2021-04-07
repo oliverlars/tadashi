@@ -1,3 +1,4 @@
+#include <windows.h>
 #include "tadashi.h"
 #include "memory.h"
 #include "lexer.h"
@@ -5,11 +6,12 @@
 #include "vm.h"
 #include "compiler.h"
 
-
 #include "memory.cc"
 #include "lexer.cc"
 #include "parser.cc"
 #include "compiler.cc"
+
+
 
 internal char*
 open_source(char* filename){
@@ -56,21 +58,40 @@ instructions_to_td(Compiler* compiler){
 }
 
 
-int main(){
+int main(int argc, char** args){
+    
+    bool should_print_ast = 0;
+    char* source = nullptr;
+    for(int i = 1; i < argc; i++){
+        if(strcmp(args[i], "-file") == 0){
+            source = args[i+1];
+            i++;
+        }
+        if(strcmp(args[i], "-print_ast") == 0){
+            should_print_ast = 1;
+        }
+    }
+    
+    if(!source){ 
+        printf("please enter a source file!");
+        exit(0);
+    }
     Lexer lexer = {};
-    lexer.at = open_source("test.td");
+    lexer.at = open_source(source);
     Parser p = {lexer};
-    global_node_arena = make_arena(sizeof(Ast_Node)*8192*2);
+    global_arena = make_arena();
     auto scope = parse_global_scope(&p);
     
-    FILE* file = fopen("ast.txt", "w");
-    pretty_print(file, scope);
+    if(should_print_ast){
+        FILE* file = fopen("ast.txt", "w");
+        pretty_print(file, scope);
+    }
     
     Compiler compiler = {};
     // TODO(Oliver): use arena
-    compiler.at = (instruction*)calloc(MEMORY_SIZE, sizeof(instruction));
+    compiler.at = push_size(&global_arena, MEMORY_SIZE, instruction);
     compiler.start = compiler.at;
-    compiler.comment_arena = make_arena(8192*8192);
+    compiler.comment_arena = make_arena();
     
     
     auto member = scope->scope.members;
