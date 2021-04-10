@@ -8,11 +8,19 @@ struct Variable {
     u64 array_length;
 };
 
+struct Scope {
+    Variable variables[256];
+    int variable_count;
+    Scope* parent;
+};
+
 struct Function {
     Token name;
     int address;
     int stack_ptr;
     Ast_Node* params;
+    Scope* scope;
+    Scope* top_level_scope;
 };
 
 #define MAX_VARIABLE (2048)
@@ -29,12 +37,16 @@ struct Compiler {
     int variable_count;
     int variable_start;
     
+    Scope* current_scope;
+    
     Function functions[MAX_FUNCTION];
     int function_count;
     
     int stack_ptr = 8192;
     
     Arena comment_arena;
+    
+    
 };
 
 

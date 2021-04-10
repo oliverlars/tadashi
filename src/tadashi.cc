@@ -382,22 +382,28 @@ int main(int argc, char** args){
     printf("RD: %d\n", vm.RD);
     
     printf("\n");
-    for(int i = 0; i < compiler.variable_count; i++){
-        auto v = compiler.variables[i];
-        if(v.is_array && v.array_length < 64){
-            printf("$%d | %.*s: %d\n", v.address, v.name.length, v.name.at, vm.memory[v.address]);
-            for(int j = 1; j <= v.array_length; j++){
-                printf("$%d | %.*s[%d]: %d\n", v.address +j, v.name.length, v.name.at, j, vm.memory[v.address+j]);
+    {
+        auto scope = entry.scope;
+        while(scope){
+            for(int i = 0; i < scope->variable_count; i++){
+                auto v = scope->variables[i];
+                if(v.is_array && v.array_length < 64){
+                    printf("$%d | %.*s: %d\n", v.address, v.name.length, v.name.at, vm.memory[v.address]);
+                    for(int j = 1; j <= v.array_length; j++){
+                        printf("$%d | %.*s[%d]: %d\n", v.address +j, v.name.length, v.name.at, j, vm.memory[v.address+j]);
+                    }
+                }else if(v.is_string){
+                    printf("$%d | %.*s: \"", v.address, v.name.length, v.name.at);
+                    for(int j = 1; j <= v.array_length-1; j++){
+                        printf("%c", vm.memory[v.address+j]);
+                    }
+                    printf("\"\n");
+                }
+                else{
+                    printf("$%d | %.*s: %d\n", v.address, v.name.length, v.name.at, vm.memory[v.address]);
+                }
             }
-        }else if(v.is_string){
-            printf("$%d | %.*s: \"", v.address, v.name.length, v.name.at);
-            for(int j = 1; j <= v.array_length-1; j++){
-                printf("%c", vm.memory[v.address+j]);
-            }
-            printf("\"\n");
-        }
-        else{
-            printf("$%d | %.*s: %d\n", v.address, v.name.length, v.name.at, vm.memory[v.address]);
+            scope = scope->parent;
         }
     }
     return 0;

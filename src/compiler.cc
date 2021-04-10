@@ -1,4 +1,16 @@
+internal Scope*
+make_compiler_scope(){
+    auto scope = push_type_zero(&global_arena, Scope);
+    return scope;
+}
 
+internal int
+push_scope_variable(Compiler* compiler, Token name){
+    compiler->current_scope->variables[compiler->current_scope->variable_count].name = name;
+    compiler->current_scope->variables[compiler->current_scope->variable_count].address = compiler->stack_ptr;
+    compiler->current_scope->variable_count++;
+    return compiler->stack_ptr++;
+}
 
 internal void
 dissassemble(Compiler* compiler) {
@@ -429,21 +441,47 @@ emit_call(Compiler* compiler, int address){
     compiler->at++;
 }
 
-internal int
-find_local(Compiler* compiler, Token name){
-    int result = compiler->variable_start;
-    for(; result < 2048; result++){
-        auto v = compiler->variables[result];
-        if(tokens_equal(name, v.name)){
-            return result;
+internal bool
+find_local(Compiler* compiler, Token name, Variable* result){
+    auto scope = compiler->current_scope;
+    while(scope){
+        for(int i = 0; i < scope->variable_count; i++){
+            auto v = scope->variables[i];
+            if(tokens_equal(name, v.name)){
+                *result = v;
+                return true;
+            }
         }
+        scope = scope->parent;
     }
-    return -1;
+    return false;
+}
+
+internal bool
+find_local(Scope* scope, Token name, Variable* result){
+    while(scope){
+        for(int i = 0; i < scope->variable_count; i++){
+            auto v = scope->variables[i];
+            if(tokens_equal(name, v.name)){
+                *result = v;
+                return true;
+            }
+        }
+        scope = scope->parent;
+    }
+    return false;
 }
 
 internal int
 push_temporary(Compiler* compiler, int value){
     emit_move_absolute(compiler, RA, value);
+    emit_store_absolute(compiler, RA,  compiler->stack_ptr);
+    return compiler->stack_ptr++;
+}
+
+internal int
+push_temporary_from_address(Compiler* compiler, int address){
+    emit_load_absolute(compiler, RA, address);
     emit_store_absolute(compiler, RA,  compiler->stack_ptr);
     return compiler->stack_ptr++;
 }
@@ -469,10 +507,7 @@ internal int
 push_local(Compiler* compiler, Token name, int value){
     emit_move_absolute(compiler, RA, value);
     emit_store_absolute(compiler, RA,  compiler->stack_ptr);
-    compiler->variables[compiler->variable_count].name = name;
-    compiler->variables[compiler->variable_count].address = compiler->stack_ptr;
-    compiler->variable_count++;
-    return compiler->stack_ptr++;
+    return push_scope_variable(compiler, name);
 }
 
 internal int
@@ -481,11 +516,12 @@ push_array(Compiler* compiler, Token name, int size){
     set_commentf(compiler, "array set: %.*s", name.length, name.at);
     emit_move_absolute(compiler, RA, compiler->stack_ptr+1);
     emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
-    compiler->variables[compiler->variable_count].name = name;
-    compiler->variables[compiler->variable_count].address = ptr;
-    compiler->variables[compiler->variable_count].is_array = true;
-    compiler->variables[compiler->variable_count].array_length = size;
-    compiler->variable_count++;
+    
+    compiler->current_scope->variables[compiler->current_scope->variable_count].name = name;
+    compiler->current_scope->variables[compiler->current_scope->variable_count].address = compiler->stack_ptr;
+    compiler->current_scope->variables[compiler->variable_count].is_array = true;
+    compiler->current_scope->variables[compiler->variable_count].array_length = size;
+    compiler->current_scope->variable_count++;
     
     compiler->stack_ptr += size;
     
@@ -499,11 +535,14 @@ push_string(Compiler* compiler, Token name, Token string){
     set_commentf(compiler, "string set: %.*s", name.length, name.at);
     emit_move_absolute(compiler, RA, compiler->stack_ptr+1);
     emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
-    compiler->variables[compiler->variable_count].name = name;
-    compiler->variables[compiler->variable_count].address = ptr;
-    compiler->variables[compiler->variable_count].is_string = true;
-    compiler->variables[compiler->variable_count].array_length = string.length+1;//strings are null terminated
-    compiler->variable_count++;
+    
+    compiler->current_scope->variables[compiler->current_scope->variable_count].name = name;
+    compiler->current_scope->variables[compiler->current_scope->variable_count].address = compiler->stack_ptr;
+    compiler->current_scope->variables[compiler->variable_count].is_array = true;
+    compiler->current_scope->variables[compiler->variable_count].array_length = string.length;
+    compiler->current_scope->variable_count++;
+    
+    compiler->stack_ptr += string.length;
     
     for(int i = 0; i < string.length; i++){
         emit_move_absolute(compiler, RA, string.at[i]);
@@ -512,17 +551,6 @@ push_string(Compiler* compiler, Token name, Token string){
     emit_move_absolute(compiler, RA, 0);
     emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
     return ptr;
-}
-
-internal void
-push_local_address(Compiler* compiler, Token name, int address){
-    emit_store_absolute(compiler, RA,  address);
-    compiler->variables[compiler->variable_count++].name = name;
-}
-
-internal void
-pop_local(Compiler* compiler, int size = 1){
-    compiler->variable_count -= size;
 }
 
 internal void
@@ -667,12 +695,15 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             
             auto arg = root->call.arguments;
             auto param = f.params;
+            auto scope = f.top_level_scope;
             int stack_ptr = f.stack_ptr;
             while(arg){
+                Variable variable = {};
+                bool found = find_local(scope, param->name, &variable);
+                assert(found);
                 //push_local_address(compiler, param->name, compile_expression(arg, RA, compiler));
-                int local = push_local(compiler, param->name, 0);
                 int expr = compile_expression(arg, RA, compiler);
-                copy_temporary(compiler,  local, expr);
+                copy_temporary(compiler,  variable.address, expr);
                 arg = arg->next;
                 param = param->next;
             }
@@ -683,12 +714,13 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
         }break;
         case AST_INDEX: {
             set_commentf(compiler, "index start: %.*s", root->name.length, root->name.at);
-            int variable = find_local(compiler, root->name);
-            assert(variable >= 0);
+            Variable variable = {};
+            int result = find_local(compiler, root->name, &variable);
+            assert(result >= 0);
             auto offset = push_temporary(compiler, 0);
             auto offset_expr = compile_expression(root->index.offset, RA, compiler);
             copy_temporary(compiler, offset, offset_expr);
-            add_temporaries(compiler, offset, compiler->variables[variable].address);
+            add_temporaries(compiler, offset, variable.address);
             emit_load_absolute(compiler, RB, offset);
             emit_add_absolute(compiler, RB, 0);
             emit_load_register(compiler, RA, RB);
@@ -862,16 +894,17 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
         }break;
         
         case AST_IDENTIFIER: {
-            int local = find_local(compiler, root->name);
+            Variable local = {};
+            int result = find_local(compiler, root->name, &local);
             set_commentf(compiler, "ref identifier: %.*s", root->name.length, root->name.at);
-            if(local < 0){
+            if(!result){
                 printf("variable \"%.*s\" is not defined in this scope", (int)root->name.length, root->name.at);
                 exit(0);
             }
-            if(compiler->variables[local].is_array){
-                return compiler->variables[local].address;
+            if(local.is_array){
+                return local.address;
             }else {
-                return compiler->variables[local].address;
+                return local.address;
             }
         }break;
     }
@@ -892,9 +925,9 @@ compile_while(Ast_Node* root, Compiler* compiler);
 
 
 internal void
-compile_scope_keep_variables(Ast_Node* scope, Compiler* compiler){
-    
+compile_scope(Ast_Node* scope, Compiler* compiler){
     auto member = scope->scope.members;
+    
     while(member){
         switch(member->type){
             case AST_DECLARATION:{
@@ -919,14 +952,21 @@ compile_scope_keep_variables(Ast_Node* scope, Compiler* compiler){
 }
 
 internal void
-compile_scope(Ast_Node* scope, Compiler* compiler){
-    int variable_count = compiler->variable_count;
-    compile_scope_keep_variables(scope, compiler);
-    compiler->variable_count = variable_count;
+push_scope(Compiler* compiler) {
+    auto parent = compiler->current_scope;
+    compiler->current_scope = make_compiler_scope();
+    compiler->current_scope->parent = parent;
+}
+
+internal void
+pop_scope(Compiler* compiler) {
+    compiler->current_scope = compiler->current_scope->parent;
 }
 
 internal void
 compile_for(Ast_Node* root, Compiler* compiler){
+    
+    push_scope(compiler);
     compile_declaration(root->_for.decl, compiler);
     auto start = (int)(compiler->at - compiler->start);
     int cond = compile_expression(root->_for.cond, RA, compiler);
@@ -938,10 +978,12 @@ compile_for(Ast_Node* root, Compiler* compiler){
     emit_jump_unconditional(compiler, start);
     auto end = (int)(compiler->at - compiler->start);
     emit_jump_zero(&temp_compiler, end);
+    pop_scope(compiler);
 }
 
 internal void
 compile_if(Ast_Node* root, Compiler* compiler){
+    push_scope(compiler);
     auto expr = compile_expression(root->_if.expr, RA, compiler);
     emit_add_absolute(compiler, RA, 0);
     
@@ -962,6 +1004,7 @@ compile_if(Ast_Node* root, Compiler* compiler){
         auto end = (int)(compiler->at - compiler->start);
         emit_jump_zero(&temp_compiler, end);
     }
+    pop_scope(compiler);
 }
 
 internal void
@@ -984,8 +1027,9 @@ compile_while(Ast_Node* root, Compiler* compiler) {
 
 internal void
 compile_declaration(Ast_Node* root, Compiler* compiler){
-    int variable = find_local(compiler, root->name);
-    if(variable < 0){
+    Variable variable = {};
+    bool result = find_local(compiler, root->name, &variable);
+    if(result == false){
         auto decl = root->decl;
         auto expr = decl.expr;
         if(expr){
@@ -1002,12 +1046,12 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
     }else {
         auto decl = root->decl;
         
-        if(compiler->variables[variable].is_array || compiler->variables[variable].is_string){
+        if(variable.is_array || variable.is_string){
             
             auto offset = push_temporary(compiler, 0);
             auto offset_expr = compile_expression(decl.offset, RA, compiler);
             copy_temporary(compiler, offset, offset_expr);
-            add_temporary_absolute(compiler, offset, compiler->variables[variable].address);
+            add_temporary_absolute(compiler, offset, variable.address);
             auto init = compile_expression(decl.expr, RA, compiler);
             emit_load_absolute(compiler, RA, offset);
             emit_add_absolute(compiler, RA, 1);
@@ -1017,14 +1061,13 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
         }else {
             auto expr = decl.expr;
             int init = compile_expression(expr, RA, compiler);
-            copy_temporary(compiler, compiler->variables[variable].address, init);
+            copy_temporary(compiler, variable.address, init);
         }
     }
 }
 
 internal void
 compile_function(Ast_Node* root, Compiler* compiler){
-    
     set_commentf(compiler, "function start: %.*s", root->name.length, root->name.at);
     
     auto function = &compiler->functions[compiler->function_count++];
@@ -1032,29 +1075,22 @@ compile_function(Ast_Node* root, Compiler* compiler){
     function->address = (int)(compiler->at - compiler->start);
     function->stack_ptr = compiler->stack_ptr;
     function->params = root->func.parameters;
+    function->scope = make_compiler_scope();
+    function->top_level_scope = function->scope;
+    compiler->current_scope = function->scope;
     int variables = compiler->variable_count;
     
-    int original_start = compiler->variable_start;
-    compiler->variable_start = compiler->variable_count;
     int variable_count = compiler->variable_count;
     auto param = root->func.parameters;
     while(param){
-        compiler->variables[compiler->variable_count].name = param->name;
-        compiler->variables[compiler->variable_count].address = compiler->stack_ptr;
-        compiler->variable_count++;
-        compiler->stack_ptr++;
+        push_scope_variable(compiler, param->name);
         param = param->next;
     }
-    
-    if(token_equals_string(root->name, "entry")){
-        compile_scope_keep_variables(root->func.body, compiler);
-    }else {
-        compile_scope(root->func.body, compiler);
-        compiler->variable_count = variable_count;
-    }
+    compile_scope(root->func.body, compiler);
     set_commentf(compiler, "function return: %.*s", root->name.length, root->name.at);
     emit_sub_absolute(compiler, RC, 1);
     emit_load_register(compiler, RD, RC);
     emit_jump_register(compiler, RD);
-    
+    compiler->variable_start = compiler->variable_count;
+    function->scope = compiler->current_scope;
 }
