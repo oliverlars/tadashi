@@ -431,7 +431,7 @@ emit_call(Compiler* compiler, int address){
 
 internal int
 find_local(Compiler* compiler, Token name){
-    int result = 0;
+    int result = compiler->variable_start;
     for(; result < 2048; result++){
         auto v = compiler->variables[result];
         if(tokens_equal(name, v.name)){
@@ -666,11 +666,15 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             auto f = compiler->functions[function_index];
             
             auto arg = root->call.arguments;
+            auto param = f.params;
             int stack_ptr = f.stack_ptr;
             while(arg){
-                emit_load_absolute(compiler, RA, compile_expression(arg, RA, compiler));
-                emit_store_absolute(compiler, RA, stack_ptr++);
+                //push_local_address(compiler, param->name, compile_expression(arg, RA, compiler));
+                int local = push_local(compiler, param->name, 0);
+                int expr = compile_expression(arg, RA, compiler);
+                copy_temporary(compiler,  local, expr);
                 arg = arg->next;
+                param = param->next;
             }
             
             emit_jump_function(compiler, root->name);
@@ -1027,8 +1031,11 @@ compile_function(Ast_Node* root, Compiler* compiler){
     function->name = root->name;
     function->address = (int)(compiler->at - compiler->start);
     function->stack_ptr = compiler->stack_ptr;
+    function->params = root->func.parameters;
     int variables = compiler->variable_count;
     
+    int original_start = compiler->variable_start;
+    compiler->variable_start = compiler->variable_count;
     int variable_count = compiler->variable_count;
     auto param = root->func.parameters;
     while(param){

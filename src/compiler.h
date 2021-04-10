@@ -12,6 +12,7 @@ struct Function {
     Token name;
     int address;
     int stack_ptr;
+    Ast_Node* params;
 };
 
 #define MAX_VARIABLE (2048)
@@ -26,6 +27,7 @@ struct Compiler {
     
     Variable variables[MAX_VARIABLE]; //arbitrary limit
     int variable_count;
+    int variable_start;
     
     Function functions[MAX_FUNCTION];
     int function_count;

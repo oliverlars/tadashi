@@ -90,6 +90,7 @@ struct Ast_Node {
             bool is_array;
             Ast_Node* offset;
             Token string;
+            bool first;
         } decl;
         struct {
             Ast_Node* members;
