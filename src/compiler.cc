@@ -519,8 +519,8 @@ push_array(Compiler* compiler, Token name, int size){
     
     compiler->current_scope->variables[compiler->current_scope->variable_count].name = name;
     compiler->current_scope->variables[compiler->current_scope->variable_count].address = compiler->stack_ptr;
-    compiler->current_scope->variables[compiler->variable_count].is_array = true;
-    compiler->current_scope->variables[compiler->variable_count].array_length = size;
+    compiler->current_scope->variables[compiler->current_scope->variable_count].is_array = true;
+    compiler->current_scope->variables[compiler->current_scope->variable_count].array_length = size;
     compiler->current_scope->variable_count++;
     
     compiler->stack_ptr += size;
@@ -538,11 +538,11 @@ push_string(Compiler* compiler, Token name, Token string){
     
     compiler->current_scope->variables[compiler->current_scope->variable_count].name = name;
     compiler->current_scope->variables[compiler->current_scope->variable_count].address = compiler->stack_ptr;
-    compiler->current_scope->variables[compiler->variable_count].is_array = true;
-    compiler->current_scope->variables[compiler->variable_count].array_length = string.length;
+    compiler->current_scope->variables[compiler->current_scope->variable_count].is_string = true;
+    compiler->current_scope->variables[compiler->current_scope->variable_count].string = string;
+    compiler->current_scope->variables[compiler->current_scope->variable_count].array_length = string.length;
     compiler->current_scope->variable_count++;
     
-    compiler->stack_ptr += string.length;
     
     for(int i = 0; i < string.length; i++){
         emit_move_absolute(compiler, RA, string.at[i]);
@@ -1009,6 +1009,7 @@ compile_if(Ast_Node* root, Compiler* compiler){
 
 internal void
 compile_while(Ast_Node* root, Compiler* compiler) {
+    push_scope(compiler);
     auto start = (int)(compiler->at - compiler->start);
     auto cond = compile_expression(root->_while.expr, RA, compiler);
     emit_add_absolute(compiler, RA, 0);
@@ -1022,6 +1023,7 @@ compile_while(Ast_Node* root, Compiler* compiler) {
     
     auto end = (int)(compiler->at - compiler->start);
     emit_jump_zero(&temp_compiler, end);
+    pop_scope(compiler);
 }
 
 

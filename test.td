@@ -1,18 +1,11 @@
-fn nonsense(imax, j){
-  kk = imax * j;
-  return kk; 
-}
-
-
 fn entry() {
 
-    the_max = 10;
-    j = 2;
-    k = 0;
+    an_array = [10];
+    a_string = "abcd";
+    
+    for i = 0; i < 10; i = i + 1 {
 
-    for i = 0; i < the_max; i = i + 1 {
-
-      k = k + nonsense(the_max, j);
-    }
+      an_array[i] = i;
+    }    
     return 0;
 }
