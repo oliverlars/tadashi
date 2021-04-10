@@ -188,7 +188,7 @@ get_token(Lexer* l){
         
         default: {
             if(is_alpha(c) || c == '_'){
-                while(is_alpha(*l->at) || *l->at == '_'){
+                while(is_alpha(*l->at) || *l->at == '_' || is_digit(*l->at)){
                     advance_lexer(l);
                 }
                 token.length = l->at  - token.at;
