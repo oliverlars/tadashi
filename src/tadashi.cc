@@ -394,7 +394,7 @@ int main(int argc, char** args){
                 if(v.is_array && v.array_length < 64){
                     printf("$%d | %.*s: %d\n", v.address, v.name.length, v.name.at, vm.memory[v.address]);
                     for(int j = 1; j <= v.array_length; j++){
-                        printf("$%d | %.*s[%d]: %d\n", v.address +j, v.name.length, v.name.at, j-1, vm.memory[v.address+j]);
+                        printf("$%d | %.*s[%d]: %d\n", v.address+j, v.name.length, v.name.at, j-1, vm.memory[v.address+j]);
                     }
                 }else if(v.is_string){
                     printf("$%d | %.*s: \"", v.address, v.name.length, v.name.at);

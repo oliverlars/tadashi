@@ -512,13 +512,13 @@ push_local(Compiler* compiler, Token name, int value){
 
 internal int
 push_array(Compiler* compiler, Token name, int size){
-    auto ptr = compiler->stack_ptr;
+    int ptr = compiler->stack_ptr;
     set_commentf(compiler, "array set: %.*s", name.length, name.at);
-    emit_move_absolute(compiler, RA, compiler->stack_ptr+1);
+    emit_move_absolute(compiler, RA, compiler->stack_ptr + 1);
     emit_store_absolute(compiler, RA,  compiler->stack_ptr++);
     
     compiler->current_scope->variables[compiler->current_scope->variable_count].name = name;
-    compiler->current_scope->variables[compiler->current_scope->variable_count].address = compiler->stack_ptr;
+    compiler->current_scope->variables[compiler->current_scope->variable_count].address = ptr;
     compiler->current_scope->variables[compiler->current_scope->variable_count].is_array = true;
     compiler->current_scope->variables[compiler->current_scope->variable_count].array_length = size;
     compiler->current_scope->variable_count++;
@@ -716,13 +716,13 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             set_commentf(compiler, "index start: %.*s", root->name.length, root->name.at);
             Variable variable = {};
             int result = find_local(compiler, root->name, &variable);
-            assert(result >= 0);
+            assert(result);
+            assert(variable.is_array);
             auto offset = push_temporary(compiler, 0);
             auto offset_expr = compile_expression(root->index.offset, RA, compiler);
             copy_temporary(compiler, offset, offset_expr);
             add_temporaries(compiler, offset, variable.address);
             emit_load_absolute(compiler, RB, offset);
-            emit_add_absolute(compiler, RB, 0);
             emit_load_register(compiler, RA, RB);
             set_commentf(compiler, "index end: %.*s", root->name.length, root->name.at);
             return push_temporary_from_register(compiler, RA);
@@ -1049,14 +1049,15 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
         auto decl = root->decl;
         
         if(variable.is_array || variable.is_string){
-            
+            set_commentf(compiler, "start of index assignment %.*s", root->name.length, root->name.at);
             auto offset = push_temporary(compiler, 0);
             auto offset_expr = compile_expression(decl.offset, RA, compiler);
             copy_temporary(compiler, offset, offset_expr);
-            add_temporary_absolute(compiler, offset, variable.address);
+            add_temporaries(compiler, offset, variable.address);
+            
             auto init = compile_expression(decl.expr, RA, compiler);
+            set_commentf(compiler, "end of index assignment %.*s", root->name.length, root->name.at);
             emit_load_absolute(compiler, RA, offset);
-            emit_add_absolute(compiler, RA, 1);
             emit_load_absolute(compiler, RB, init);
             emit_store_register(compiler, RB, RA);
             
