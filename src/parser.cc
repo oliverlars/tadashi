@@ -1,4 +1,4 @@
-
+//below is all the functions to make a node and set the type
 internal Ast_Node*
 make_ast_node(){
     auto ast = push_type_zero(&global_arena, Ast_Node);
@@ -96,6 +96,7 @@ make_while_node(){
     return _while;
 }
 
+//take a token of a number literal and make it a number
 internal int
 token_to_value(Token token){
     int result = 0;
@@ -107,23 +108,26 @@ token_to_value(Token token){
 
 internal Ast_Node* parse_expr(Parser* p);
 
+//base expr will be one of either number literal, array/string index, function call, or variable
 internal Ast_Node*
 parse_base_expr(Parser* p){
     auto token = get_token(&p->l);
-    if(token.type == TOKEN_LEFT_PAREN){
+    
+    if(token.type == TOKEN_LEFT_PAREN){ //brackets found, this means we recursively call expr and pass it
+        //as brackets have a higher precedence than base expression
         auto expr = parse_expr(p);
         get_token(&p->l);
         return expr;
     }
     
-    if(token.type == TOKEN_IDENTIFIER){
-        if(peek_token(&p->l).type == TOKEN_LEFT_PAREN){
+    if(token.type == TOKEN_IDENTIFIER){ //could be a variable, array index, or function call
+        if(peek_token(&p->l).type == TOKEN_LEFT_PAREN){ //must be a function call as '(' was detected after an identifer
             auto call = make_call_node();
             call->name = token;
             expect_token(&p->l, TOKEN_LEFT_PAREN);
             
             auto args = &call->call.arguments;
-            while(!(peek_token(&p->l).type == TOKEN_RIGHT_PAREN)){
+            while(!(peek_token(&p->l).type == TOKEN_RIGHT_PAREN)){ //parse all the arguments
                 auto arg = parse_expr(p);
                 *args = arg;
                 args = &(*args)->next;
@@ -134,15 +138,15 @@ parse_base_expr(Parser* p){
                     get_token(&p->l);
                 }
             }
-            expect_token(&p->l, TOKEN_RIGHT_PAREN);
+            expect_token(&p->l, TOKEN_RIGHT_PAREN); //after arguments passed we must have a closing ')' or we exit
             
             return call;
             // should parse arguments properly
-        }else if(peek_token(&p->l).type == TOKEN_LEFT_BRACKET){
+        }else if(peek_token(&p->l).type == TOKEN_LEFT_BRACKET){ //if next token is '[' then we are an array index
             get_token(&p->l);
             auto index = make_index_node();
             index->name = token;
-            index->index.offset = parse_expr(p);
+            index->index.offset = parse_expr(p); //offset from base array pointer
             expect_token(&p->l, TOKEN_RIGHT_BRACKET);
             return index;
         }else {
@@ -152,11 +156,11 @@ parse_base_expr(Parser* p){
         }
     }
     
-    if(token.type == TOKEN_NUMBER){
+    if(token.type == TOKEN_NUMBER){ //must be a number literal
         auto value = make_value_node();
         value->value.number = token_to_value(token);
         return value;
-    }else if (token.type == TOKEN_CHAR){
+    }else if (token.type == TOKEN_CHAR){ //must be a character literal ('a') which is just a number ('a' == 95)
         auto value = make_value_node();
         value->value.number = *token.at;
         return value;
@@ -169,22 +173,22 @@ internal Ast_Node*
 parse_unary_expr(Parser* p){
     auto expr = make_unary_node();
     auto peek = peek_token(&p->l);
-    if(peek.type == TOKEN_MINUS){
+    if(peek.type == TOKEN_MINUS){ //unary expressions are base expressions with an operator such as -9 or +variable
         get_token(&p->l);
         expr->unary.op_type = OP_SUB;
-        expr->unary.right = parse_base_expr(p);
+        expr->unary.right = parse_base_expr(p); //parse after the minus
         
     }else if(peek.type == TOKEN_PLUS){
         get_token(&p->l);
         expr->unary.op_type = OP_ADD;
-        expr->unary.right = parse_base_expr(p);
+        expr->unary.right = parse_base_expr(p); //parse after plus
         
     }else if(peek.type == TOKEN_BANG){
         get_token(&p->l);
         expr->unary.op_type = OP_NOT;
-        expr->unary.right = parse_base_expr(p);
+        expr->unary.right = parse_base_expr(p); //parse after bang
     }else {
-        expr = parse_base_expr(p);
+        expr = parse_base_expr(p); //parse expression as we did not find a unary
     }
     return expr;
 }
@@ -198,8 +202,9 @@ parse_mul_expr(Parser* p){
           (peek.type == TOKEN_FORWARD_SLASH) ||
           (peek.type == TOKEN_RIGHT_ANGLE_RIGHT_ANGLE) ||
           (peek.type == TOKEN_LEFT_ANGLE_LEFT_ANGLE) ||
-          (peek.type == TOKEN_HAT)){
+          (peek.type == TOKEN_HAT)){ //keep parsing all operators at multiply/divide precedence
         auto bin = make_binary_node();
+        //set operator type we found for this binary node, bin
         if(peek.type == TOKEN_ASTERISK){
             bin->binary.op_type = OP_MUL;
         }
@@ -214,10 +219,10 @@ parse_mul_expr(Parser* p){
             bin->binary.op_type = OP_DIV;
         }
         
-        get_token(&p->l);
+        get_token(&p->l); //skip the token we peeked
         
-        bin->binary.left = expr;
-        bin->binary.right = parse_unary_expr(p);
+        bin->binary.left = expr; //we have the left of the expression so set it
+        bin->binary.right = parse_unary_expr(p); //now parse the right hand side of the expression
         
         expr = bin;
         peek = peek_token(&p->l);
@@ -242,8 +247,9 @@ parse_binary_expr(Parser* p){
           (peek.type == TOKEN_AMPERSAND_AMPERSAND) ||
           (peek.type == TOKEN_AMPERSAND) ||
           (peek.type == TOKEN_BAR) ||
-          (peek.type == TOKEN_BAR_BAR)){
+          (peek.type == TOKEN_BAR_BAR)){ //parse everything that the precedence of plua/minus
         auto bin = make_binary_node();
+        //set type of binary node
         if(peek.type == TOKEN_PLUS){
             bin->binary.op_type = OP_ADD;
         }else if(peek.type == TOKEN_MINUS){
@@ -316,16 +322,11 @@ parse_decl(Parser* p){
 
 internal Ast_Node*
 parse_return(Parser* p){
-    get_token(&p->l); //return
+    get_token(&p->l); //we already found 'return' keyword so just skip it
     auto ret = make_return_node();
-    auto expr = parse_expr(p);
+    auto expr = parse_expr(p); //return expression
     ret->ret.expr = expr;
     return ret;
-}
-
-internal Ast_Node*
-parse_call(Parser* p){
-    return nullptr;
 }
 
 internal Ast_Node* parse_scope(Parser* p);
@@ -338,16 +339,18 @@ parse_for(Parser* p){
     get_token(&p->l);
     auto name = get_token(&p->l);
     auto decl = parse_decl(p);
-    decl->name = name;
+    decl->name = name; //name of initialised variable for declaration
+    
+    //format for for loop is: for <var> = <expression> ';' <boolean expression> ';' <assignment> ';'
     
     expect_token(&p->l, TOKEN_SEMICOLON);
-    auto cond = parse_expr(p);
+    auto cond = parse_expr(p); //boolean expression
     expect_token(&p->l, TOKEN_SEMICOLON);
     name = get_token(&p->l);
     auto stmt = parse_decl(p);
     stmt->name = name;
     expect_token(&p->l, TOKEN_LEFT_BRACE);
-    auto body = parse_scope(p);
+    auto body = parse_scope(p); //body of for loop
     
     expect_token(&p->l, TOKEN_RIGHT_BRACE);
     auto _for = make_for_node();

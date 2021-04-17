@@ -13,6 +13,7 @@
 
 
 
+//Open source code from disc, 0 allocate array big enough to hold text
 internal char*
 open_source(char* filename){
     char* result = 0;
@@ -32,36 +33,13 @@ open_source(char* filename){
     return result;
 }
 
-/*
-RA
-RB
-RC stack pointer
-RD return address
-
-declarations work by writing to stack pointer location in memory
-
-accessing variables just takes stack pointer - location on stack
-
-
-register allocation: just make all variables dirty and slap a bunch of 
-load/stores on everything
-*/
-
-internal void
-instructions_to_td(Compiler* compiler){
-    FILE* file = fopen("instructions.td", "w");
-    auto instr = compiler->start;
-    while(instr != compiler->at){
-        fprintf(file, "memory[%d] = %d;\n", instr - compiler->start, *instr++);
-    }
-    fclose(file);
-}
-
 
 int main(int argc, char** args){
     
     bool should_print_ast = 0;
     char* source = nullptr;
+    
+    //read command line arguments
     for(int i = 1; i < argc; i++){
         if(strcmp(args[i], "-file") == 0){
             source = args[i+1];
@@ -76,11 +54,13 @@ int main(int argc, char** args){
         printf("please enter a source file!");
         exit(0);
     }
+    
+    
     Lexer lexer = {};
     lexer.at = open_source(source);
     Parser p = {lexer};
-    global_arena = make_arena();
-    auto scope = parse_global_scope(&p);
+    global_arena = make_arena(); //arena used for most compiler related allocations
+    auto scope = parse_global_scope(&p); //global scope, it's a normal socpe node that only parses functions
     
     if(should_print_ast){
         FILE* file = fopen("ast.txt", "w");
@@ -89,11 +69,12 @@ int main(int argc, char** args){
     
     Compiler compiler = {};
     // TODO(Oliver): use arena
-    compiler.at = push_size(&global_arena, MEMORY_SIZE, instruction);
+    compiler.at = push_size(&global_arena, MEMORY_SIZE, instruction); //allocate enough to store instructions an data (same as FPGA)
     compiler.start = compiler.at;
-    compiler.comment_arena = make_arena();
+    compiler.comment_arena = make_arena(); //arena dedicated to just comments
     
     
+    //compile all functions up front
     auto member = scope->scope.members;
     while(member){
         compile_function(member, &compiler);
@@ -102,6 +83,7 @@ int main(int argc, char** args){
     
     VM vm = {};
     
+    //find where the function is, we should start executing from here
     int f = find_function(&compiler, "entry");
     Function entry = compiler.functions[f];
     
@@ -109,22 +91,23 @@ int main(int argc, char** args){
     
     emit_move_absolute(&compiler, RC, 55000); //function address pointer
     
-    emit_jump_function(&compiler, "entry");
+    emit_jump_function(&compiler, "entry"); //first thing we do is jump to this function
     
     vm.memory = compiler.start;
     vm.pc = start;
-    instructions_to_td(&compiler);
     
     
+    //this is where the virtual machine runs
+    //we stop executing when the program counter (pc) runs past the compiler
     while(vm.pc < (compiler.at - compiler.start)){
         
-        instruction instr = vm.memory[vm.pc];
+        instruction instr = vm.memory[vm.pc]; //fetch current instruction that the program counter points to
         
-        int opcode = get_opcode(instr);
+        int opcode = get_opcode(instr); //extract the first 6 bits (which are the opcode)
         
         bool jumped = 0;
         
-        switch(opcode){
+        switch(opcode){ //which instruction are we looking at
             
             case OP_MOVE_ABSOLUTE:{
                 int r = get_register_x(instr);

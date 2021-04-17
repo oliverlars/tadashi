@@ -1,17 +1,27 @@
+
+
 internal Scope*
 make_compiler_scope(){
     auto scope = push_type_zero(&global_arena, Scope);
     return scope;
 }
 
+//push a named variable onto the stack
+//these variables are ones written in code such as a = 10;
+//they are the only ones that get referred to
 internal int
 push_scope_variable(Compiler* compiler, Token name){
+    //fetch the current scope (anything between curly braces) and push it onto the scope's stack
+    //its location in memory is where the stack pointer currently points to.
     compiler->current_scope->variables[compiler->current_scope->variable_count].name = name;
     compiler->current_scope->variables[compiler->current_scope->variable_count].address = compiler->stack_ptr;
     compiler->current_scope->variable_count++;
     return compiler->stack_ptr++;
 }
 
+//take a given instruction and output the assembly for it
+// such as move RA, 10
+//it will also print out the associated comment with it
 internal void
 dissassemble(Compiler* compiler) {
     
@@ -210,13 +220,15 @@ dissassemble(Compiler* compiler) {
         printf("\n");
     }
 }
-
+//set the comment for the current instruction in the compiler
+//for when it gets dissassembled
 internal void
 set_comment(Compiler* compiler, char* comment){
     compiler->has_comment = true;
     compiler->comment = comment;
 }
 
+//set the comment, but with a format specifier
 internal void
 set_commentf(Compiler* compiler, char* fmt, ...){
     
@@ -230,6 +242,11 @@ set_commentf(Compiler* compiler, char* fmt, ...){
     compiler->has_comment = true;
     compiler->comment = buffer;
 }
+
+//Below are all the emit instruction functions
+//they all work similar, opcode in the most signifcant bits
+// and registers after or operands/addresses
+//the instruction set used is the one on http://www.simplecpudesign.com/
 
 internal void
 emit_move_absolute(Compiler* compiler, Register r, int value){
@@ -441,6 +458,9 @@ emit_call(Compiler* compiler, int address){
     compiler->at++;
 }
 
+//to find a named variable, we first search the current scope, but if it's not found
+//we go up to the parent scope and search that until either we find the  variable or we don't
+//return true or false depending on whether we find it, and then pass the result into the last parameter
 internal bool
 find_local(Compiler* compiler, Token name, Variable* result){
     auto scope = compiler->current_scope;
@@ -457,6 +477,8 @@ find_local(Compiler* compiler, Token name, Variable* result){
     return false;
 }
 
+
+//Same as previous  find local except this takes a specific scope start
 internal bool
 find_local(Scope* scope, Token name, Variable* result){
     while(scope){
@@ -472,6 +494,9 @@ find_local(Scope* scope, Token name, Variable* result){
     return false;
 }
 
+//temporaries are used in calculations as storage for variables that are not user created
+//we move it to a register first, then store it into main memory at the current stack location
+//a situation we may use this would be to duplicate a value to avoid changing the original variable
 internal int
 push_temporary(Compiler* compiler, int value){
     emit_move_absolute(compiler, RA, value);
@@ -479,6 +504,7 @@ push_temporary(Compiler* compiler, int value){
     return compiler->stack_ptr++;
 }
 
+//if we have a variable in memory, we can copy the variable elsewhere
 internal int
 push_temporary_from_address(Compiler* compiler, int address){
     emit_load_absolute(compiler, RA, address);
@@ -486,23 +512,27 @@ push_temporary_from_address(Compiler* compiler, int address){
     return compiler->stack_ptr++;
 }
 
+//if we have a value in a register, we can make a temporary from it
 internal int
 push_temporary_from_register(Compiler* compiler, Register r){
     emit_store_absolute(compiler, r,  compiler->stack_ptr);
     return compiler->stack_ptr++;
 }
 
+//copy a temporary into main memory
 internal int
 duplicate_temporary(Compiler* compiler, int address){
     emit_load_absolute(compiler, RA,  address); 
     return push_temporary_from_register(compiler, RA);
 }
 
+//currently not used, but it just decrements the stack pointer
 internal int
 pop_temporary(Compiler* compiler, Register r, int value){
     compiler->stack_ptr--;
 }
 
+//push local will store a value in a register, then push it to main memory and we also keep track of it
 internal int
 push_local(Compiler* compiler, Token name, int value){
     emit_move_absolute(compiler, RA, value);
@@ -510,6 +540,9 @@ push_local(Compiler* compiler, Token name, int value){
     return push_scope_variable(compiler, name);
 }
 
+//push array to the current scope, stack pointer is incremented by the number of elements in the array + 1
+//this is because for an array a = [10]; the identifier 'a' actually points to the start of the array which
+//is the next contiguous memory location. Useful when passing the address to a function
 internal int
 push_array(Compiler* compiler, Token name, int size){
     int ptr = compiler->stack_ptr;
@@ -528,6 +561,9 @@ push_array(Compiler* compiler, Token name, int size){
     return ptr;
 }
 
+//very similar as push_array except we initialise this array with the value of each character in the string
+//for example: string = "potato";
+//the ascii value for each character is copied into the arrays contents
 internal int
 push_string(Compiler* compiler, Token name, Token string){
     
@@ -553,6 +589,9 @@ push_string(Compiler* compiler, Token name, Token string){
     return ptr;
 }
 
+//adding to temporaries is not as easy as just emitting an add onto two registers
+//without register allocation, adding two numbers involves fetching the temporary from main memory
+//into a register
 internal void
 add_temporary_absolute(Compiler* compiler, int address, int value){
     emit_load_absolute(compiler, RA,  address);
@@ -627,6 +666,8 @@ copy_temporary(Compiler* compiler, int address_x, int address_y){
     emit_store_absolute(compiler, RA, address_x);
 }
 
+//very similar to find_local but this works on functions. all functions are declared in global scope
+// and functions can't be declared within functions
 internal int
 find_function(Compiler* compiler, Token name){
     int i = 0;
@@ -682,7 +723,13 @@ emit_return_function(Compiler* compiler){
     emit_jump_register(compiler, RD);
 }
 
-//returns stack positions for variables/temporaries
+//this is one of the larger functions
+//it takes an ast node and switches over the type of that node
+// if it's a binary node, then it will have a left and right child which it will recursively call
+// and further get evaluated until the final temporaries are returned which can then be operated on
+//appropriately.
+// the leaves of the tree will either be identifiers, function calls, array/string indices or number literals
+
 internal int
 compile_expression(Ast_Node* root, Register r, Compiler* compiler){
     assert(root);
@@ -697,6 +744,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             auto param = f.params;
             auto scope = f.top_level_scope;
             int stack_ptr = f.stack_ptr;
+            //copy the function arguments to the functions stack locations so it can be read by the function
             while(arg){
                 Variable variable = {};
                 bool found = find_local(scope, param->name, &variable);
@@ -717,10 +765,10 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             Variable variable = {};
             int result = find_local(compiler, root->name, &variable);
             assert(result);
-            assert(variable.is_array);
+            assert(variable.is_array); //make sure they're valid
             auto offset = push_temporary(compiler, 0);
-            auto offset_expr = compile_expression(root->index.offset, RA, compiler);
-            copy_temporary(compiler, offset, offset_expr);
+            auto offset_expr = compile_expression(root->index.offset, RA, compiler);  
+            copy_temporary(compiler, offset, offset_expr); //we copy the offset (a[offset]) to avoid making changes to it
             add_temporaries(compiler, offset, variable.address);
             emit_load_absolute(compiler, RB, offset);
             emit_load_register(compiler, RA, RB);
@@ -728,10 +776,12 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             return push_temporary_from_register(compiler, RA);
         }break;
         case AST_VALUE: {
-            //emit_move_absolute(compiler, r, root->value.number);
+            //just make a temporary from the number literal
             return push_temporary(compiler, root->value.number);
         }break;
         case AST_UNARY: {
+            //here we take a number and either negate it or invert it
+            //numbers are by default positive so having +6 will still be 6 so we leave it
             int right = compile_expression(root->unary.right, RA, compiler);
             int result = duplicate_temporary(compiler, right);
             switch(root->unary.op_type){
@@ -755,11 +805,19 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
             return result;
         }break;
         case AST_BINARY: {
+            
             int a = compile_expression(root->binary.left, RA, compiler);
             int b = compile_expression(root->binary.right, RB, compiler);
+            //we have now address for the left and right children of the binary node
+            // for 6 + 7 the tree will look like
+            //    +
+            //   / \
+//  6   7
+            //recursively calling on the children will then evaluate and emit the code to fold the left and right of the tree
             
-            int result = duplicate_temporary(compiler, a);
+            int result = duplicate_temporary(compiler, a); //duplicate a and use as result to avoid tampering with original a
             
+            //depending on the type, emit the necessary instructions
             switch(root->binary.op_type){
                 case OP_ADD:{
                     add_temporaries(compiler, result, b);
@@ -768,6 +826,8 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     sub_temporaries(compiler, result, b);
                 }break;
                 case OP_MUL:{
+                    //there are no multiply instructions so we just use repeated addition
+                    //very slow for large numbers
                     int count = duplicate_temporary(compiler, b);
                     emit_load_absolute(compiler, RB, b);
                     auto jump = (int)(compiler->at - compiler->start);
@@ -783,9 +843,10 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                 }break;
                 
                 case OP_DIV: {
+                    //as per the multiplys, there are no divides so similarly we just do repeated subtraction
                     result = push_temporary(compiler, 0);
                     auto count = duplicate_temporary(compiler, a);
-                    auto jump = (int)(compiler->at - compiler->start);
+                    auto jump = (int)(compiler->at - compiler->start); //temp compiler needed 
                     auto temp_compiler = *compiler;
                     compiler->at++;
                     add_temporary_absolute(compiler, result, 1);
@@ -796,6 +857,8 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     emit_jump_not_positive(&temp_compiler, end);
                 }break;
                 
+                
+                //boolean operators will evaluate always to either 1 or 0
                 case OP_LT:{
                     sub_temporaries(compiler, result, b);
                     emit_move_absolute(compiler, RA, 0);
@@ -868,6 +931,8 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
                     or_temporaries(compiler, result, b);
                 }break;
                 
+                
+                //thers only a shift left 1, so we repeat it
                 case OP_SL:{
                     int count = duplicate_temporary(compiler, b);
                     auto jump = compiler->at;
@@ -894,6 +959,7 @@ compile_expression(Ast_Node* root, Register r, Compiler* compiler){
         }break;
         
         case AST_IDENTIFIER: {
+            //find local and return the address of it
             Variable local = {};
             int result = find_local(compiler, root->name, &local);
             set_commentf(compiler, "ref identifier: %.*s", root->name.length, root->name.at);
@@ -924,6 +990,9 @@ internal void
 compile_while(Ast_Node* root, Compiler* compiler);
 
 
+//this compile scope is used for anything but the global scope, as this supports all executable code
+//global scope is purely for function definitions
+//scopes are a linked list of nodes so we traverse that as such
 internal void
 compile_scope(Ast_Node* scope, Compiler* compiler){
     auto member = scope->scope.members;
@@ -951,6 +1020,7 @@ compile_scope(Ast_Node* scope, Compiler* compiler){
     }
 }
 
+//make a new scope, scopes are also linked lists
 internal void
 push_scope(Compiler* compiler) {
     auto parent = compiler->current_scope;
@@ -958,6 +1028,7 @@ push_scope(Compiler* compiler) {
     compiler->current_scope->parent = parent;
 }
 
+//pop the scope, as we are done with it and don't care about the variables there anymore as no one can refer to them
 internal void
 pop_scope(Compiler* compiler) {
     compiler->current_scope = compiler->current_scope->parent;
@@ -966,25 +1037,26 @@ pop_scope(Compiler* compiler) {
 internal void
 compile_for(Ast_Node* root, Compiler* compiler){
     
-    push_scope(compiler);
-    compile_declaration(root->_for.decl, compiler);
-    auto start = (int)(compiler->at - compiler->start);
-    int cond = compile_expression(root->_for.cond, RA, compiler);
-    emit_add_absolute(compiler, RA, 0);
-    auto temp_compiler = *compiler;
+    push_scope(compiler); //make a new scope for inside the for loop
+    compile_declaration(root->_for.decl, compiler); //this is the variable that the loop iterates over
+    auto start = (int)(compiler->at - compiler->start); //this is the number it starts at 
+    int cond = compile_expression(root->_for.cond, RA, compiler); //this is the condition that has to be met to iterate
+    emit_add_absolute(compiler, RA, 0); //just a hack to make sure the cpu sets the flags for the previous operation
+    auto temp_compiler = *compiler; //copy compiler at this position to insert a jump once we know which address to jump to
     compiler->at++;
-    compile_scope(root->_for.body, compiler);
-    compile_declaration(root->_for.stmt, compiler);
-    emit_jump_unconditional(compiler, start);
-    auto end = (int)(compiler->at - compiler->start);
+    compile_scope(root->_for.body, compiler); //compile the for loop's scope
+    compile_declaration(root->_for.stmt, compiler); //this is how how much to vary the variable each iteration
+    emit_jump_unconditional(compiler, start); //keep jumping back to the start
+    auto end = (int)(compiler->at - compiler->start); //insert jump at start incase condition is met, then jump to here
     emit_jump_zero(&temp_compiler, end);
-    pop_scope(compiler);
+    pop_scope(compiler); //we are done with scope
 }
 
 internal void
 compile_if(Ast_Node* root, Compiler* compiler){
-    push_scope(compiler);
-    auto expr = compile_expression(root->_if.expr, RA, compiler);
+    push_scope(compiler); //make new scope for inside the if
+    auto expr = compile_expression(root->_if.expr, RA, compiler); //expression to evaluate
+    //anything non-zero is true
     emit_add_absolute(compiler, RA, 0);
     
     auto temp_compiler = *compiler; //we don't know where we will need to jump to yet
@@ -995,7 +1067,7 @@ compile_if(Ast_Node* root, Compiler* compiler){
         auto temp_compiler2 = *compiler; //we don't know where we will need to jump to yet
         compiler->at++;
         
-        auto _else = (int)(compiler->at - compiler->start);
+        auto _else = (int)(compiler->at - compiler->start); //else condition for ifs 
         emit_jump_zero(&temp_compiler, _else);
         compile_scope(root->_if._else, compiler);
         auto end = (int)(compiler->at - compiler->start);
@@ -1030,14 +1102,14 @@ compile_while(Ast_Node* root, Compiler* compiler) {
 internal void
 compile_declaration(Ast_Node* root, Compiler* compiler){
     Variable variable = {};
-    bool result = find_local(compiler, root->name, &variable);
-    if(result == false){
-        auto decl = root->decl;
-        auto expr = decl.expr;
+    bool result = find_local(compiler, root->name, &variable); //if it exists, reassign it
+    if(result == false){ //time to make a new variable
+        auto decl = root->decl; 
+        auto expr = decl.expr; //initialisation expression e.g. a = 1*2 + 4;
         if(expr){
-            int local = push_local(compiler, root->name, 0);
-            int init = compile_expression(expr, RA, compiler);
-            copy_temporary(compiler, local, init);
+            int local = push_local(compiler, root->name, 0); //new local initialised to 0
+            int init = compile_expression(expr, RA, compiler); //compile expression and store result in temporary "init"
+            copy_temporary(compiler, local, init); //copy it to the new local
         }else {
             if(decl.is_array){
                 push_array(compiler, root->name, decl.array_length);
@@ -1064,7 +1136,7 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
         }else {
             auto expr = decl.expr;
             int init = compile_expression(expr, RA, compiler);
-            copy_temporary(compiler, variable.address, init);
+            copy_temporary(compiler, variable.address, init); //reassign to new expression
         }
     }
 }
@@ -1072,7 +1144,7 @@ compile_declaration(Ast_Node* root, Compiler* compiler){
 internal void
 compile_function(Ast_Node* root, Compiler* compiler){
     set_commentf(compiler, "function start: %.*s", root->name.length, root->name.at);
-    
+    //push new function to be able to refer to it elsewhere
     auto function = &compiler->functions[compiler->function_count++];
     function->name = root->name;
     function->address = (int)(compiler->at - compiler->start);
@@ -1083,17 +1155,19 @@ compile_function(Ast_Node* root, Compiler* compiler){
     compiler->current_scope = function->scope;
     int variables = compiler->variable_count;
     
+    
     int variable_count = compiler->variable_count;
     auto param = root->func.parameters;
     while(param){
-        push_scope_variable(compiler, param->name);
+        push_scope_variable(compiler, param->name); //push all parameters as new variables
         param = param->next;
     }
-    compile_scope(root->func.body, compiler);
-    set_commentf(compiler, "function return: %.*s", root->name.length, root->name.at);
+    compile_scope(root->func.body, compiler); //new scope for function body
+    set_commentf(compiler, "function return: %.*s", root->name.length, root->name.at); //comment for return
     emit_sub_absolute(compiler, RC, 1);
     emit_load_register(compiler, RD, RC);
     emit_jump_register(compiler, RD);
+    //store return value in RD
     compiler->variable_start = compiler->variable_count;
     function->scope = compiler->current_scope;
 }
