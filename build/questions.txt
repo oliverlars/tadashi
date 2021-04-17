@@ -1,0 +1,22 @@
+1 2 3 4 5
+
+
+1. was it easy to install and run?
+
+2. was it easy to understand the first explanation?
+
+3. was the output easy to understand?
+
+4. did you find many bugs?
+
+5. was the language familiar enough to be useful?
+
+6. what data structure is used to represent scopes?
+
+7. what data structure is used to store the AST?
+
+8. the backend cpu does not have a multiply/divide instruction, how is it emulated instead?
+
+9. which function is responsible for generating arrays in compiler.cc? how does it work?
+
+10. overall, did this project provide an easier way to understand and explore how compilers work?
